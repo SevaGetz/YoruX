@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.2
+// @version      0.8.0
 // @description  YoruX: модульный мод для X/Twitter с плагинами
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -399,7 +399,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.2"),
+        h("span", { class: "yx-ver" }, "v0.8.0"),
         iconBtn("Закрыть", I.close, true, () => close())
       ),
       body
@@ -1295,7 +1295,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.2", location.href);
+  LOG("loaded v0.8.0", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   watchMenu();
