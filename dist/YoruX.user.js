@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.0
+// @version      0.8.4
 // @description  YoruX: модульный мод для X/Twitter с плагинами
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -501,7 +501,7 @@
         h("button", { type: "button", onclick: () => window.open("https://github.com/SevaGetz/YoruX", "_blank") }, t("repo")),
         h("button", { type: "button", onclick: () => window.open("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js", "_blank") }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.0")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.4")
     );
   }
   function getPages() {
@@ -540,7 +540,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.0"),
+        h("span", { class: "yx-ver" }, "v0.8.4"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -746,7 +746,7 @@
       return;
     }
     favs.forEach((item) => {
-      const t3 = el("div", "fav-tile");
+      const tile = el("div", "fav-tile");
       let m;
       if (item.type === "video") {
         m = el("video");
@@ -768,14 +768,14 @@
               io.disconnect();
             }
           }, { root: panel });
-          io.observe(t3);
+          io.observe(tile);
         }
-        t3.addEventListener("mouseenter", () => {
+        tile.addEventListener("mouseenter", () => {
           loadVideo();
           m.play().catch(() => {
           });
         });
-        t3.addEventListener("mouseleave", () => m.pause());
+        tile.addEventListener("mouseleave", () => m.pause());
       } else {
         m = el("img");
         m.loading = "lazy";
@@ -784,15 +784,15 @@
       const del = el("button", "fav-del");
       del.type = "button";
       del.textContent = "★";
-      del.title = t3("delFav");
+      del.title = t2("delFav");
       del.onclick = (e) => {
         e.stopPropagation();
         toggle(item);
       };
-      t3.append(m, del);
-      if (onPick) t3.onclick = () => onPick(item);
-      else t3.style.cursor = "default";
-      panel.appendChild(t3);
+      tile.append(m, del);
+      if (onPick) tile.onclick = () => onPick(item);
+      else tile.style.cursor = "default";
+      panel.appendChild(tile);
     });
   }
 
@@ -1504,7 +1504,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.0", location.href);
+  LOG("loaded v0.8.4", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   watchMenu();
