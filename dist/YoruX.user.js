@@ -234,6 +234,7 @@
     plugins: '<path d="M10 4.5a2 2 0 1 1 4 0V6h3.5A1.5 1.5 0 0 1 19 7.5V11h-1.5a2 2 0 1 0 0 4H19v3.5a1.5 1.5 0 0 1-1.5 1.5H14v-1.5a2 2 0 1 0-4 0V20H6.5A1.5 1.5 0 0 1 5 18.5V15h1.5a2 2 0 1 0 0-4H5V7.5A1.5 1.5 0 0 1 6.5 6H10z"/>',
     backup: '<path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/>',
     star: '<path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85z"/>',
+    chev: '<path d="M9 5l7 7-7 7"/>',
     tune: '<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>'
   };
   var iconBtn = (title, inner, fill, onclick) => h("button", { type: "button", class: "yx-icon", title, onclick }, ico(inner, fill));
@@ -423,7 +424,7 @@
           type: "button",
           class: "yx-tile",
           onclick: () => show(p.id)
-        }, h("span", { class: "yx-tile-ico" }, ico(p.icon)), h("span", { class: "yx-tile-title" }, p.title), h("span", { class: "yx-tile-desc" }, p.desc)))));
+        }, h("span", { class: "yx-tile-ico" }, ico(p.icon)), h("span", { class: "yx-tile-txt" }, h("span", { class: "yx-tile-title" }, p.title), h("span", { class: "yx-tile-desc" }, p.desc)), h("span", { class: "yx-tile-chev" }, ico(I.chev))))));
         return;
       }
       title.textContent = page.title;
@@ -1259,14 +1260,14 @@
   .yx-modal button.yx-danger:hover{background:rgba(244,33,46,.1)}
   .yx-modal button.yx-icon{width:34px;height:34px;min-height:0;padding:0;border:0;display:flex;align-items:center;justify-content:center}
   .yx-btns{display:flex;flex-wrap:wrap;gap:8px;padding-top:16px}
-  .yx-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:12px;padding-top:12px}
-  .yx-modal button.yx-tile{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;border-radius:16px;
-    padding:16px;min-height:112px;font-weight:400}
-  .yx-tile-ico{margin-bottom:10px}
+  .yx-tiles{display:flex;flex-direction:column;padding-top:4px}
+  .yx-modal button.yx-tile{display:flex;align-items:center;gap:16px;text-align:left;width:100%;border:0;border-radius:0;
+    padding:14px 16px;margin:0 -16px;width:calc(100% + 32px);min-height:0;font-weight:400}
+  .yx-tile-ico{flex:none;display:flex}
+  .yx-tile-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
   .yx-tile-title{font-weight:700;font-size:17px;line-height:20px}
   .yx-tile-desc{color:var(--yx-sub);font-size:13px;line-height:16px}
-  .yx-modal .yx-search{width:100%;box-sizing:border-box;background:transparent;color:inherit;border:1px solid var(--yx-line);
-    border-radius:999px;height:42px;padding:0 16px;font:inherit;margin:8px 0;border-color:var(--yx-line)}
+  .yx-tile-chev{flex:none;color:var(--yx-sub);display:flex}
   .yx-search:focus,.yx-modal select:focus,.yx-modal input[type=number]:focus,.yx-modal input[type=text]:focus{outline:0;border-color:#1d9bf0}
   .yx-plugin{border-top:1px solid var(--yx-line);padding:14px 0}
   .yx-plugin:first-of-type{border-top:0}

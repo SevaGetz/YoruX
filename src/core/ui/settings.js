@@ -12,6 +12,7 @@ const I = {
   plugins: '<path d="M10 4.5a2 2 0 1 1 4 0V6h3.5A1.5 1.5 0 0 1 19 7.5V11h-1.5a2 2 0 1 0 0 4H19v3.5a1.5 1.5 0 0 1-1.5 1.5H14v-1.5a2 2 0 1 0-4 0V20H6.5A1.5 1.5 0 0 1 5 18.5V15h1.5a2 2 0 1 0 0-4H5V7.5A1.5 1.5 0 0 1 6.5 6H10z"/>',
   backup: '<path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/>',
   star: '<path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85z"/>',
+  chev: '<path d="M9 5l7 7-7 7"/>',
   tune: '<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
 };
 const iconBtn = (title, inner, fill, onclick) => h('button', { type: 'button', class: 'yx-icon', title, onclick }, ico(inner, fill));
@@ -164,7 +165,7 @@ export function openSettings(pageId) {
       back.hidden = true;
       body.append(h('div', { class: 'yx-tiles' }, getPages().map((p) => h('button', {
         type: 'button', class: 'yx-tile', onclick: () => show(p.id),
-      }, h('span', { class: 'yx-tile-ico' }, ico(p.icon)), h('span', { class: 'yx-tile-title' }, p.title), h('span', { class: 'yx-tile-desc' }, p.desc)))));
+      }, h('span', { class: 'yx-tile-ico' }, ico(p.icon)), h('span', { class: 'yx-tile-txt' }, h('span', { class: 'yx-tile-title' }, p.title), h('span', { class: 'yx-tile-desc' }, p.desc)), h('span', { class: 'yx-tile-chev' }, ico(I.chev))))));
       return;
     }
     title.textContent = page.title;
