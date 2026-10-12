@@ -117,12 +117,15 @@ function renderBackup(box) {
 }
 
 /* ---------- страница «Общие» ---------- */
+// GM_openInTab не оставляет пустую вкладку, когда менеджер скриптов перехватывает ссылку на .user.js
+const openUrl = (url) => (typeof GM_openInTab === 'function' ? GM_openInTab(url, { active: true }) : window.open(url, '_blank'));
+
 function renderGeneral(box) {
   box.append(
     h('div', { class: 'yx-opts' }, optionRows(general)),
     h('div', { class: 'yx-btns' },
-      h('button', { type: 'button', onclick: () => window.open('https://github.com/' + __REPO__, '_blank') }, t('repo')),
-      h('button', { type: 'button', onclick: () => window.open(__RAW__, '_blank') }, t('update'))),
+      h('button', { type: 'button', onclick: () => openUrl('https://github.com/' + __REPO__) }, t('repo')),
+      h('button', { type: 'button', onclick: () => openUrl(__RAW__) }, t('update'))),
     h('div', { class: 'yx-hint', style: { paddingTop: '12px' } }, t('version') + ': v' + __VERSION__));
 }
 

@@ -26,6 +26,7 @@ const header = `// ==UserScript==
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
 // @grant        GM_registerMenuCommand
+// @grant        GM_openInTab
 ${CONNECT.map((c) => `// @connect      ${c}`).join('\n')}
 // @run-at       document-idle
 // @updateURL    ${raw}
