@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.6
+// @version      0.8.7
 // @description  YoruX: модульный мод для X/Twitter с плагинами
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -11,6 +11,7 @@
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
 // @grant        GM_registerMenuCommand
+// @grant        GM_openInTab
 // @connect      giphy.com
 // @connect      twimg.com
 // @run-at       document-idle
@@ -497,16 +498,17 @@
       }, t("reset"))
     ));
   }
+  var openUrl = (url) => typeof GM_openInTab === "function" ? GM_openInTab(url, { active: true }) : window.open(url, "_blank");
   function renderGeneral(box) {
     box.append(
       h("div", { class: "yx-opts" }, optionRows(settings)),
       h(
         "div",
         { class: "yx-btns" },
-        h("button", { type: "button", onclick: () => window.open("https://github.com/SevaGetz/YoruX", "_blank") }, t("repo")),
-        h("button", { type: "button", onclick: () => window.open("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js", "_blank") }, t("update"))
+        h("button", { type: "button", onclick: () => openUrl("https://github.com/SevaGetz/YoruX") }, t("repo")),
+        h("button", { type: "button", onclick: () => openUrl("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js") }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.6")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.7")
     );
   }
   function getPages() {
@@ -548,7 +550,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.6"),
+        h("span", { class: "yx-ver" }, "v0.8.7"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -1515,7 +1517,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.6", location.href);
+  LOG("loaded v0.8.7", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   watchMenu();
