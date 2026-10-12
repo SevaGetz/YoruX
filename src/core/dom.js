@@ -19,8 +19,16 @@ export function h(tag, props, ...kids) {
 
 export const el = (tag, cls) => h(tag, cls ? { class: cls } : null);
 
+// X задаёт шрифт не на body, а на корневых контейнерах — берём оттуда, иначе получится Times
+export function xFont() {
+  const ref = document.querySelector('[data-testid="primaryColumn"]') || document.querySelector('#react-root') || document.body;
+  const ff = getComputedStyle(ref).fontFamily;
+  return ff && !/^\s*(Times|serif)/i.test(ff) ? ff :
+    'TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+}
+
 export function toast(msg) {
-  const t = h('div', { class: 'yx-toast' }, msg);
+  const t = h('div', { class: 'yx-toast', style: { fontFamily: xFont() } }, msg);
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3500);
 }

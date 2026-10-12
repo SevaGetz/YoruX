@@ -1,4 +1,4 @@
-import { h, toast } from '../dom';
+import { h, toast, xFont } from '../dom';
 import { plugins, isEnabled, setEnabled, exportConfig, importConfig, resetConfig } from '../api';
 import { t, tr, onLangChange } from '../i18n';
 import { settings as general } from '../general';
@@ -155,6 +155,7 @@ export function openSettings(pageId) {
   box.dataset.theme = (r * 299 + g * 587 + b * 114) / 1000 > 128 ? 'light' : 'dark';
   box.style.background = bg;
   box.style.color = cs.color;
+  box.style.fontFamily = xFont();
   box.style.setProperty('--yx-bg', bg);
   box.style.setProperty('--yx-fg', cs.color);
 
