@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.1
+// @version      0.8.0
 // @description  YoruX: модульный мод для X/Twitter с плагинами
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -225,6 +225,18 @@
   }
 
   // src/core/ui/settings.js
+  var ico = (inner, fill) => h("span", {
+    innerHTML: '<svg viewBox="0 0 24 24" width="' + (fill ? 20 : 26) + '" height="' + (fill ? 20 : 26) + '" fill="' + (fill ? "currentColor" : "none") + '" stroke="' + (fill ? "none" : "currentColor") + '" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">' + inner + "</svg>"
+  });
+  var I = {
+    back: '<path d="M7.414 13l5.043 5.04-1.414 1.42L3.586 12l7.457-7.46 1.414 1.42L7.414 11H21v2H7.414z"/>',
+    close: '<path d="M10.59 12L4.54 5.96l1.42-1.42L12 10.59l6.04-6.05 1.42 1.42L13.41 12l6.05 6.04-1.42 1.42L12 13.41l-6.04 6.05-1.42-1.42L10.59 12z"/>',
+    plugins: '<path d="M10 4.5a2 2 0 1 1 4 0V6h3.5A1.5 1.5 0 0 1 19 7.5V11h-1.5a2 2 0 1 0 0 4H19v3.5a1.5 1.5 0 0 1-1.5 1.5H14v-1.5a2 2 0 1 0-4 0V20H6.5A1.5 1.5 0 0 1 5 18.5V15h1.5a2 2 0 1 0 0-4H5V7.5A1.5 1.5 0 0 1 6.5 6H10z"/>',
+    backup: '<path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/>',
+    star: '<path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85z"/>',
+    tune: '<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>'
+  };
+  var iconBtn = (title, inner, fill, onclick) => h("button", { type: "button", class: "yx-icon", title, onclick }, ico(inner, fill));
   var sw = (checked, onChange) => {
     const i = h("input", { type: "checkbox", checked: !!checked });
     i.addEventListener("change", () => onChange(i.checked));
@@ -274,14 +286,9 @@
             opts.append(h("div", { class: "yx-opt" }, h("label", null, def.title || key), control(p.settings.store, key, def)));
           });
         }
-        const gear = p.settings ? h("button", {
-          type: "button",
-          class: "yx-icon",
-          title: "Настройки плагина",
-          onclick: () => {
-            opts.hidden = !opts.hidden;
-          }
-        }, "⚙") : null;
+        const gear = p.settings ? iconBtn("Настройки плагина", I.tune, false, () => {
+          opts.hidden = !opts.hidden;
+        }) : null;
         list.append(h(
           "div",
           { class: "yx-plugin" },
@@ -359,16 +366,16 @@
   function getPages() {
     const on = plugins.filter(isEnabled).length;
     const pages = [
-      { id: "plugins", icon: "🧩", title: "Плагины", desc: on + " из " + plugins.length + " включено", render: renderPlugins }
+      { id: "plugins", icon: I.plugins, title: "Плагины", desc: on + " из " + plugins.length + " включено", render: renderPlugins }
     ];
     plugins.filter((p) => p.started && p.tile).forEach((p) => pages.push({
       id: "plugin:" + p.name,
-      icon: p.tile.icon || "★",
+      icon: p.tile.icon || I.star,
       title: p.tile.title,
       desc: p.tile.desc ? p.tile.desc() : "",
       render: p.tile.render
     }));
-    pages.push({ id: "backup", icon: "💾", title: "Резервная копия", desc: "Экспорт и импорт настроек", render: renderBackup });
+    pages.push({ id: "backup", icon: I.backup, title: "Резервная копия", desc: "Экспорт и импорт настроек", render: renderBackup });
     return pages;
   }
   function openSettings(pageId) {
@@ -376,9 +383,13 @@
     const cs = getComputedStyle(document.body);
     const ov = h("div", { class: "yx-ov" });
     const box = h("div", { class: "yx-modal" });
-    box.style.background = cs.backgroundColor === "rgba(0, 0, 0, 0)" ? "#000" : cs.backgroundColor;
+    const bg = cs.backgroundColor === "rgba(0, 0, 0, 0)" ? "rgb(0, 0, 0)" : cs.backgroundColor;
+    const [r, g, b] = (bg.match(/\d+/g) || [0, 0, 0]).map(Number);
+    box.dataset.theme = (r * 299 + g * 587 + b * 114) / 1e3 > 128 ? "light" : "dark";
+    box.style.background = bg;
     box.style.color = cs.color;
-    const back = h("button", { type: "button", class: "yx-icon", title: "Назад", hidden: true, onclick: () => show(null) }, "←");
+    const back = iconBtn("Назад", I.back, true, () => show(null));
+    back.hidden = true;
     const title = h("h2", null, "YoruX");
     const body = h("div", { class: "yx-body" });
     box.append(
@@ -387,8 +398,8 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.1"),
-        h("button", { type: "button", class: "yx-icon", title: "Закрыть", onclick: () => close() }, "✕")
+        h("span", { class: "yx-ver" }, "v0.8.0"),
+        iconBtn("Закрыть", I.close, true, () => close())
       ),
       body
     );
@@ -412,7 +423,7 @@
           type: "button",
           class: "yx-tile",
           onclick: () => show(p.id)
-        }, h("span", { class: "yx-tile-ico" }, p.icon), h("span", { class: "yx-tile-title" }, p.title), h("span", { class: "yx-tile-desc" }, p.desc)))));
+        }, h("span", { class: "yx-tile-ico" }, ico(p.icon)), h("span", { class: "yx-tile-title" }, p.title), h("span", { class: "yx-tile-desc" }, p.desc)))));
         return;
       }
       title.textContent = page.title;
@@ -1136,7 +1147,7 @@
     settings,
     styles: CSS,
     tile: {
-      icon: "★",
+      icon: '<path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85z"/>',
       title: "Избранные GIF",
       desc: () => load().length + " шт.",
       render: renderManager
@@ -1229,53 +1240,61 @@
   // src/core/ui/styles.js
   var CORE_CSS = `
   .yx-ov{position:fixed;inset:0;z-index:2147483646;background:rgba(91,112,131,.4);display:flex;align-items:center;justify-content:center}
-  .yx-modal{width:min(640px,94vw);height:min(560px,90vh);display:flex;flex-direction:column;border-radius:16px;box-sizing:border-box;
-    border:1px solid rgba(128,128,128,.35);font-family:inherit;font-size:15px;overflow:hidden}
-  .yx-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(128,128,128,.25)}
-  .yx-head h2{margin:0;font-size:20px;font-weight:700;flex:1}
-  .yx-ver{opacity:.55;font-size:13px}
-  .yx-modal button{border:1px solid rgba(128,128,128,.5);background:transparent;color:inherit;border-radius:999px;
-    padding:7px 14px;cursor:pointer;font:inherit;font-size:14px}
-  .yx-modal button:hover{background:rgba(128,128,128,.15)}
-  .yx-modal button.yx-primary{background:#1d9bf0;border-color:#1d9bf0;color:#fff}
-  .yx-modal button.yx-danger{color:#f4212e;border-color:rgba(244,33,46,.5)}
-  .yx-modal button.yx-icon{width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1}
+  .yx-modal{--yx-sub:#71767b;--yx-line:#2f3336;--yx-ctl:#536471;--yx-hover:rgba(231,233,234,.1);--yx-pbg:#eff3f4;--yx-pfg:#0f1419;
+    width:min(600px,94vw);height:min(640px,90vh);display:flex;flex-direction:column;border-radius:16px;box-sizing:border-box;
+    font-family:inherit;font-size:15px;overflow:hidden;box-shadow:0 0 15px rgba(255,255,255,.2),0 0 3px rgba(255,255,255,.15),0 0 8px rgba(255,255,255,.15)}
+  .yx-modal[data-theme=light]{--yx-sub:#536471;--yx-line:#eff3f4;--yx-ctl:#cfd9de;--yx-hover:rgba(15,20,25,.1);--yx-pbg:#0f1419;--yx-pfg:#fff;
+    box-shadow:0 0 15px rgba(101,119,134,.2),0 0 3px rgba(101,119,134,.15),0 0 8px rgba(101,119,134,.15)}
   .yx-modal [hidden]{display:none !important}
-  .yx-body{flex:1;overflow:auto;padding:16px}
-  .yx-btns{display:flex;flex-wrap:wrap;gap:8px;padding-top:12px}
-  .yx-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
-  .yx-modal button.yx-tile{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;border-radius:14px;padding:16px;min-height:104px}
-  .yx-tile-ico{font-size:26px;line-height:1}
-  .yx-tile-title{font-weight:700;font-size:16px}
-  .yx-tile-desc{opacity:.65;font-size:13px}
-  .yx-search{width:100%;box-sizing:border-box;background:transparent;color:inherit;border:1px solid rgba(128,128,128,.5);
-    border-radius:10px;padding:9px 12px;font:inherit;margin-bottom:8px}
-  .yx-plugin{border-top:1px solid rgba(128,128,128,.25);padding:12px 0}
+  .yx-modal svg{display:block}
+  .yx-head{display:flex;align-items:center;gap:20px;height:53px;padding:0 16px;flex:none}
+  .yx-head h2{margin:0;font-size:20px;line-height:24px;font-weight:800;flex:1}
+  .yx-ver{color:var(--yx-sub);font-size:13px}
+  .yx-body{flex:1;overflow:auto;padding:4px 16px 16px}
+  .yx-modal button{border:1px solid var(--yx-ctl);background:transparent;color:inherit;border-radius:999px;
+    min-height:36px;padding:0 16px;cursor:pointer;font:inherit;font-size:15px;font-weight:700;transition:background .15s}
+  .yx-modal button:hover{background:var(--yx-hover)}
+  .yx-modal button.yx-primary{background:var(--yx-pbg);border-color:transparent;color:var(--yx-pfg)}
+  .yx-modal button.yx-danger{color:#f4212e;border-color:rgba(244,33,46,.5)}
+  .yx-modal button.yx-danger:hover{background:rgba(244,33,46,.1)}
+  .yx-modal button.yx-icon{width:34px;height:34px;min-height:0;padding:0;border:0;display:flex;align-items:center;justify-content:center}
+  .yx-btns{display:flex;flex-wrap:wrap;gap:8px;padding-top:16px}
+  .yx-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:12px;padding-top:12px}
+  .yx-modal button.yx-tile{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;border-radius:16px;
+    padding:16px;min-height:112px;font-weight:400}
+  .yx-tile-ico{margin-bottom:10px}
+  .yx-tile-title{font-weight:700;font-size:17px;line-height:20px}
+  .yx-tile-desc{color:var(--yx-sub);font-size:13px;line-height:16px}
+  .yx-modal .yx-search{width:100%;box-sizing:border-box;background:transparent;color:inherit;border:1px solid var(--yx-line);
+    border-radius:999px;height:42px;padding:0 16px;font:inherit;margin:8px 0;border-color:var(--yx-line)}
+  .yx-search:focus,.yx-modal select:focus,.yx-modal input[type=number]:focus,.yx-modal input[type=text]:focus{outline:0;border-color:#1d9bf0}
+  .yx-plugin{border-top:1px solid var(--yx-line);padding:14px 0}
   .yx-plugin:first-of-type{border-top:0}
   .yx-prow{display:flex;align-items:center;gap:12px}
   .yx-pinfo{flex:1;min-width:0}
-  .yx-pname{font-weight:700}
-  .yx-pdesc{opacity:.65;font-size:13px;margin-top:2px}
-  .yx-opts{margin:10px 0 0 12px;padding-left:12px;border-left:2px solid rgba(128,128,128,.3)}
-  .yx-opt{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0}
-  .yx-opt label{flex:1}
+  .yx-pname{font-weight:700;font-size:15px;line-height:20px}
+  .yx-pdesc{color:var(--yx-sub);font-size:13px;line-height:16px;margin-top:2px}
+  .yx-opts{margin-top:10px;padding:4px 14px;border:1px solid var(--yx-line);border-radius:12px}
+  .yx-opt{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--yx-line)}
+  .yx-opt:first-child{border-top:0}
+  .yx-opt > label:first-child{flex:1;font-size:15px}
   .yx-modal select,.yx-modal input[type=number],.yx-modal input[type=text]{background:transparent;color:inherit;
-    border:1px solid rgba(128,128,128,.5);border-radius:8px;padding:6px 8px;font:inherit}
+    border:1px solid var(--yx-ctl);border-radius:4px;height:36px;padding:0 8px;font:inherit}
   .yx-modal select option{color:#000}
-  .yx-sw{position:relative;display:inline-block;width:40px;height:22px;flex:none;cursor:pointer}
+  .yx-sw{position:relative;display:inline-block;width:38px;height:22px;flex:none;cursor:pointer}
   .yx-sw input{opacity:0;width:0;height:0;position:absolute}
-  .yx-sw span{position:absolute;inset:0;border-radius:999px;background:rgba(128,128,128,.5);transition:background .15s}
-  .yx-sw span::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+  .yx-sw span{position:absolute;inset:0;border-radius:999px;background:var(--yx-ctl);transition:background .15s}
+  .yx-sw span::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
   .yx-sw input:checked + span{background:#1d9bf0}
-  .yx-sw input:checked + span::after{transform:translateX(18px)}
-  .yx-empty{opacity:.65;text-align:center;padding:24px 0}
+  .yx-sw input:checked + span::after{transform:translateX(16px)}
+  .yx-empty{color:var(--yx-sub);text-align:center;padding:32px 0}
   .yx-menu-item{cursor:pointer}
   .yx-toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);z-index:2147483647;background:#1d9bf0;color:#fff;
-    padding:10px 16px;border-radius:8px;font-size:14px;max-width:80vw}
+    padding:12px 16px;border-radius:4px;font-size:15px;max-width:80vw}
 `;
 
   // src/index.js
-  LOG("loaded v0.8.1", location.href);
+  LOG("loaded v0.8.0", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   watchMenu();

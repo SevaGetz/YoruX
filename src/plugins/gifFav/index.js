@@ -50,7 +50,7 @@ export default definePlugin({
   settings,
   styles: CSS,
   tile: {
-    icon: '★',
+    icon: '<path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85z"/>',
     title: 'Избранные GIF',
     desc: () => load().length + ' шт.',
     render: renderManager,
