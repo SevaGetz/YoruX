@@ -1,7 +1,5 @@
 name: build
 on:
-  push:
-    branches: [main, master]
   workflow_dispatch:
 permissions:
   contents: write
