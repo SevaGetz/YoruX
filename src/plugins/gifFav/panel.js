@@ -1,0 +1,46 @@
+import { el } from '@core/dom';
+import { load, toggle } from './store';
+
+export function fillPanel(panel, onPick) {
+  panel.textContent = '';
+  const favs = load();
+  if (!favs.length) {
+    const e = el('div', 'fav-empty');
+    e.textContent = 'Пока пусто. Наведи на GIF (в пикере или в твите) и нажми ★';
+    panel.appendChild(e);
+    return;
+  }
+  favs.forEach((item) => {
+    const t = el('div', 'fav-tile');
+    let m;
+    if (item.type === 'video') {
+      // mp4 не качаем заранее: есть постер — грузим видео только при наведении,
+      // нет постера — только когда плитка попала в видимую область
+      m = el('video');
+      m.muted = true; m.loop = true; m.playsInline = true; m.preload = 'none';
+      const loadVideo = () => {
+        if (!m.getAttribute('src')) { m.preload = 'metadata'; m.src = item.url; }
+      };
+      if (item.preview) m.poster = item.preview;
+      else {
+        const io = new IntersectionObserver((es) => {
+          if (es.some((e) => e.isIntersecting)) { loadVideo(); io.disconnect(); }
+        }, { root: panel });
+        io.observe(t);
+      }
+      t.addEventListener('mouseenter', () => { loadVideo(); m.play().catch(() => {}); });
+      t.addEventListener('mouseleave', () => m.pause());
+    } else {
+      m = el('img');
+      m.loading = 'lazy';
+      m.src = item.preview || item.url;
+    }
+    const del = el('button', 'fav-del');
+    del.type = 'button'; del.textContent = '★'; del.title = 'Убрать из избранного';
+    del.onclick = (e) => { e.stopPropagation(); toggle(item); };
+    t.append(m, del);
+    if (onPick) t.onclick = () => onPick(item);
+    else t.style.cursor = 'default';
+    panel.appendChild(t);
+  });
+}
