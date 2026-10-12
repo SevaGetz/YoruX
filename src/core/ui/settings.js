@@ -155,6 +155,8 @@ export function openSettings(pageId) {
   box.dataset.theme = (r * 299 + g * 587 + b * 114) / 1000 > 128 ? 'light' : 'dark';
   box.style.background = bg;
   box.style.color = cs.color;
+  box.style.setProperty('--yx-bg', bg);
+  box.style.setProperty('--yx-fg', cs.color);
 
   const back = iconBtn(t('back'), I.back, true, () => show(null));
   back.hidden = true;

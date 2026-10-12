@@ -41,7 +41,9 @@ export const CORE_CSS = `
   .yx-opt > label:first-child{flex:1;font-size:15px}
   .yx-modal select,.yx-modal input[type=number],.yx-modal input[type=text]{background:transparent;color:inherit;
     border:1px solid var(--yx-ctl);border-radius:4px;height:36px;padding:0 8px;font:inherit}
-  .yx-modal select option{color:#000}
+  .yx-modal[data-theme=dark]{color-scheme:dark}
+  .yx-modal[data-theme=light]{color-scheme:light}
+  .yx-modal select option{background-color:var(--yx-bg);color:var(--yx-fg)}
   .yx-sw{position:relative;display:inline-block;width:38px;height:22px;flex:none;cursor:pointer}
   .yx-sw input{opacity:0;width:0;height:0;position:absolute}
   .yx-sw span{position:absolute;inset:0;border-radius:999px;background:var(--yx-ctl);transition:background .15s}
