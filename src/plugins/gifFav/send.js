@@ -1,6 +1,7 @@
 import { LOG, getRoots, qAll, toast } from '@core/dom';
 import { mp4ToGif } from './encoder';
 import { settings } from './settings';
+import { t } from './i18n';
 
 function findFileInput(d) {
   const all = qAll(getRoots(), 'input[type="file"]');
@@ -57,17 +58,17 @@ function closeDialog(d) {
 }
 
 export function pick(item, d) {
-  toast('Загружаю GIF…');
+  toast(t('loading'));
   GM_xmlhttpRequest({
     method: 'GET',
     url: item.url,
     responseType: 'blob',
     onload: (r) => {
       const blob = r.response;
-      if (!blob || !blob.size) { toast('Не удалось скачать GIF'); return; }
+      if (!blob || !blob.size) { toast(t('dlFail')); return; }
       const finish = (file) => {
         if (!attachFile(file, d)) {
-          toast('Не нашёл ни поле загрузки, ни поле ввода. Подробности в консоли (F12).');
+          toast(t('noTarget'));
           return;
         }
         if (settings.store.closeAfter) setTimeout(() => closeDialog(d), 300);
@@ -75,12 +76,12 @@ export function pick(item, d) {
       const type = blob.type || (item.type === 'video' ? 'video/mp4' : 'image/gif');
       if (/^video\//.test(type) && settings.store.convert) {
         // GIF из твита лежит как mp4 — X принял бы его как видео, поэтому делаем настоящий .gif
-        toast('Конвертирую в GIF…');
+        toast(t('converting'));
         mp4ToGif(blob, settings.store.maxW)
           .then((bytes) => finish(new File([bytes], 'favorite.gif', { type: 'image/gif' })))
           .catch((e) => {
             LOG('конвертация в GIF не удалась, отправляю как видео:', e);
-            toast('Не получилось конвертировать, отправляю как видео');
+            toast(t('convFail'));
             finish(new File([blob], 'favorite.mp4', { type }));
           });
         return;
@@ -88,6 +89,6 @@ export function pick(item, d) {
       const ext = { 'video/mp4': 'mp4', 'image/gif': 'gif', 'image/webp': 'webp', 'image/png': 'png', 'image/jpeg': 'jpg' }[type] || 'gif';
       finish(new File([blob], 'favorite.' + ext, { type }));
     },
-    onerror: () => toast('Ошибка сети при скачивании GIF'),
+    onerror: () => toast(t('netErr')),
   });
 }

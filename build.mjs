@@ -25,6 +25,7 @@ const header = `// ==UserScript==
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
+// @grant        GM_registerMenuCommand
 ${CONNECT.map((c) => `// @connect      ${c}`).join('\n')}
 // @run-at       document-idle
 // @updateURL    ${raw}
@@ -61,7 +62,7 @@ const opts = {
   legalComments: 'none',
   banner: { js: header },
   alias: { '@core': path.join(src, 'core') },
-  define: { __VERSION__: JSON.stringify(version) },
+  define: { __VERSION__: JSON.stringify(version), __REPO__: JSON.stringify(pkg.repo), __RAW__: JSON.stringify(raw) },
   plugins: [pluginsPlugin],
   logLevel: 'info',
 };

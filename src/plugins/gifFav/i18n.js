@@ -1,0 +1,38 @@
+import { createT } from '@core/i18n';
+
+export const t = createT({
+  ru: {
+    title: 'Избранные GIF',
+    desc: 'Вкладка «Избранное» в пикере GIF, звёздочки на GIF в пикере и в твитах, конвертация mp4 → GIF при отправке',
+    optConvert: 'Конвертировать GIF из твитов (mp4) в настоящий .gif при отправке',
+    optMaxW: 'Макс. ширина GIF при конвертации',
+    optClose: 'Закрывать окно выбора GIF после выбора',
+    count: '{n} шт.', total: 'Всего: {n}',
+    all: 'Все', favTab: '★ Избранное', addFav: 'В избранное', delFav: 'Убрать из избранного',
+    empty: 'Пока пусто. Наведи на GIF (в пикере или в твите) и нажми ★',
+    export: 'Экспорт', import: 'Импорт', clear: 'Очистить всё',
+    confirmClear: 'Удалить все GIF из избранного? Это нельзя отменить.',
+    imported: 'Импортировано: {n}', notArray: 'не массив',
+    loading: 'Загружаю GIF…', dlFail: 'Не удалось скачать GIF',
+    noTarget: 'Не нашёл ни поле загрузки, ни поле ввода. Подробности в консоли (F12).',
+    converting: 'Конвертирую в GIF…', convFail: 'Не получилось конвертировать, отправляю как видео',
+    netErr: 'Ошибка сети при скачивании GIF',
+  },
+  en: {
+    title: 'Favorite GIFs',
+    desc: 'A "Favorites" tab in the GIF picker, stars on GIFs in the picker and in tweets, mp4 → GIF conversion on send',
+    optConvert: 'Convert GIFs from tweets (mp4) to a real .gif when sending',
+    optMaxW: 'Max GIF width when converting',
+    optClose: 'Close the GIF picker after choosing',
+    count: '{n} items', total: 'Total: {n}',
+    all: 'All', favTab: '★ Favorites', addFav: 'Add to favorites', delFav: 'Remove from favorites',
+    empty: 'Nothing here yet. Hover a GIF (in the picker or in a tweet) and click ★',
+    export: 'Export', import: 'Import', clear: 'Clear all',
+    confirmClear: 'Delete all favorite GIFs? This cannot be undone.',
+    imported: 'Imported: {n}', notArray: 'not an array',
+    loading: 'Downloading GIF…', dlFail: 'Could not download the GIF',
+    noTarget: 'Could not find an upload field or composer. See the console (F12) for details.',
+    converting: 'Converting to GIF…', convFail: 'Conversion failed, sending as video',
+    netErr: 'Network error while downloading the GIF',
+  },
+});

@@ -10,6 +10,7 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
+// @grant        GM_registerMenuCommand
 // @connect      giphy.com
 // @connect      twimg.com
 // @run-at       document-idle
@@ -31,7 +32,13 @@
   var write = (key, value) => GM_setValue(key, JSON.stringify(value));
 
   // src/core/dom.js
-  var LOG = (...a) => console.log("[YoruX]", ...a);
+  var debug = false;
+  var setDebug = (v) => {
+    debug = !!v;
+  };
+  var LOG = (...a) => {
+    if (debug) console.log("[YoruX]", ...a);
+  };
   function h(tag, props, ...kids) {
     const e = document.createElement(tag);
     for (const [k, v] of Object.entries(props || {})) {
@@ -47,9 +54,9 @@
   }
   var el = (tag, cls) => h(tag, cls ? { class: cls } : null);
   function toast(msg) {
-    const t = h("div", { class: "yx-toast" }, msg);
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 3500);
+    const t3 = h("div", { class: "yx-toast" }, msg);
+    document.body.appendChild(t3);
+    setTimeout(() => t3.remove(), 3500);
   }
   var styles = /* @__PURE__ */ new Map();
   var styleEls = /* @__PURE__ */ new WeakMap();
@@ -116,6 +123,102 @@
   var getSeenRoots = () => seenRoots;
   var qAll = (roots, sel) => roots.flatMap((r) => [...r.querySelectorAll(sel)]);
 
+  // src/core/locales.js
+  var locales_default = {
+    ru: {
+      back: "Назад",
+      close: "Закрыть",
+      general: "Общие",
+      generalDesc: "Язык, меню, отладка",
+      plugins: "Плагины",
+      pluginsDesc: "{n} из {m} включено",
+      search: "Поиск плагинов…",
+      nothing: "Ничего не найдено",
+      pluginSettings: "Настройки плагина",
+      backup: "Резервная копия",
+      backupDesc: "Экспорт и импорт настроек",
+      export: "Экспорт настроек",
+      import: "Импорт настроек",
+      reset: "Сбросить",
+      confirmReset: "Сбросить включённые плагины и их настройки? Данные плагинов (например, избранные GIF) не затрагиваются.",
+      imported: "Настройки импортированы",
+      resetDone: "Настройки сброшены",
+      readErr: "Не получилось прочитать файл: ",
+      notYorux: "это не файл настроек YoruX",
+      lang: "Язык",
+      langAuto: "Авто",
+      menuItem: "Пункт YoruX в меню «Ещё»",
+      menuItemHint: "Если выключить, настройки открываются из меню менеджера скриптов",
+      debug: "Отладочные сообщения в консоли",
+      version: "Версия",
+      repo: "Репозиторий",
+      update: "Проверить обновление"
+    },
+    en: {
+      back: "Back",
+      close: "Close",
+      general: "General",
+      generalDesc: "Language, menu, debugging",
+      plugins: "Plugins",
+      pluginsDesc: "{n} of {m} enabled",
+      search: "Search plugins…",
+      nothing: "Nothing found",
+      pluginSettings: "Plugin settings",
+      backup: "Backup",
+      backupDesc: "Export and import settings",
+      export: "Export settings",
+      import: "Import settings",
+      reset: "Reset",
+      confirmReset: "Reset enabled plugins and their settings? Plugin data (e.g. favorite GIFs) is not affected.",
+      imported: "Settings imported",
+      resetDone: "Settings reset",
+      readErr: "Could not read the file: ",
+      notYorux: "this is not a YoruX settings file",
+      lang: "Language",
+      langAuto: "Auto",
+      menuItem: 'YoruX item in the "More" menu',
+      menuItemHint: "If disabled, open settings from the userscript manager menu",
+      debug: "Debug messages in the console",
+      version: "Version",
+      repo: "Repository",
+      update: "Check for updates"
+    }
+  };
+
+  // src/core/i18n.js
+  var source = () => "auto";
+  var setLangSource = (fn) => {
+    source = fn;
+  };
+  var lang = () => {
+    const p = source();
+    if (p === "ru" || p === "en") return p;
+    return (navigator.language || "en").toLowerCase().startsWith("ru") ? "ru" : "en";
+  };
+  var subs = /* @__PURE__ */ new Set();
+  var onLangChange = (cb) => {
+    subs.add(cb);
+    return () => subs.delete(cb);
+  };
+  var emitLang = () => subs.forEach((f) => {
+    try {
+      f();
+    } catch (e) {
+      console.error(e);
+    }
+  });
+  var createT = (d) => (key, vars) => {
+    let s = d[lang()] && d[lang()][key] || d.en && d.en[key] || key;
+    if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => k in vars ? vars[k] : m);
+    return s;
+  };
+  var tr = (v) => {
+    if (typeof v === "function") return v();
+    if (v && typeof v === "object") return v[lang()] || v.en || "";
+    return v == null ? "" : v;
+  };
+  var t = createT(locales_default);
+
   // src/core/api.js
   var ENABLED_KEY = "yorux:enabled";
   var optsKey = (n) => "yorux:opts:" + n;
@@ -125,6 +228,7 @@
     listeners.add(cb);
     return () => listeners.delete(cb);
   };
+  var notify = () => emit();
   var emit = () => listeners.forEach((f) => {
     try {
       f();
@@ -149,11 +253,18 @@
         const saved = { ...getOpts(owner.name), [key]: value };
         optCache.set(owner.name, saved);
         write(optsKey(owner.name), saved);
+        if (def[key] && def[key].onChange) def[key].onChange(value);
         return true;
       }
     });
     return { def, store, owner };
   }
+  var extras = [];
+  var registerCoreSettings = (name, settings3) => {
+    settings3.owner.name = name;
+    extras.push({ name, settings: settings3 });
+  };
+  var withSettings = () => [...extras, ...plugins].filter((p) => p.settings);
   function definePlugin(p) {
     if (!p.name) throw new Error("plugin without name");
     if (p.settings) p.settings.owner.name = p.name;
@@ -201,13 +312,12 @@
   var exportConfig = () => ({
     yorux: 1,
     enabled: enabledMap(),
-    options: Object.fromEntries(plugins.filter((p) => p.settings).map((p) => [p.name, { ...getOpts(p.name) }]))
+    options: Object.fromEntries(withSettings().map((p) => [p.name, { ...getOpts(p.name) }]))
   });
   function importConfig(obj) {
-    if (!obj || obj.yorux !== 1) throw new Error("это не файл настроек YoruX");
+    if (!obj || obj.yorux !== 1) throw new Error(t("notYorux"));
     write(ENABLED_KEY, obj.enabled || {});
-    plugins.forEach((p) => {
-      if (!p.settings) return;
+    withSettings().forEach((p) => {
       const o = obj.options && obj.options[p.name] || {};
       optCache.set(p.name, o);
       write(optsKey(p.name), o);
@@ -216,13 +326,30 @@
   }
   function resetConfig() {
     write(ENABLED_KEY, {});
-    plugins.forEach((p) => {
-      if (!p.settings) return;
+    withSettings().forEach((p) => {
       optCache.set(p.name, {});
       write(optsKey(p.name), {});
     });
     syncPlugins();
   }
+
+  // src/core/general.js
+  var settings = definePluginSettings({
+    lang: {
+      type: "select",
+      title: () => t("lang"),
+      default: "auto",
+      onChange: emitLang,
+      choices: [{ value: "auto", label: () => t("langAuto") }, { value: "ru", label: "Русский" }, { value: "en", label: "English" }]
+    },
+    menuItem: { type: "boolean", title: () => t("menuItem"), hint: () => t("menuItemHint"), default: true, onChange: notify },
+    debug: { type: "boolean", title: () => t("debug"), default: false, onChange: setDebug }
+  });
+  registerCoreSettings("core", settings);
+  setLangSource(() => settings.store.lang);
+  var apply = () => setDebug(settings.store.debug);
+  apply();
+  onPluginsChange(apply);
 
   // src/core/ui/settings.js
   var ico = (inner, fill) => h("span", {
@@ -250,7 +377,7 @@
     });
     if (def.type === "select") {
       const choices = def.choices.map((c) => typeof c === "object" ? c : { value: c, label: String(c) });
-      const s = h("select", null, choices.map((c) => h("option", { value: String(c.value) }, c.label)));
+      const s = h("select", null, choices.map((c) => h("option", { value: String(c.value) }, tr(c.label))));
       s.value = String(cur);
       s.addEventListener("change", () => {
         store[key] = choices.find((c) => String(c.value) === s.value).value;
@@ -271,23 +398,24 @@
     });
     return i;
   }
+  var optionRows = (settings3) => Object.entries(settings3.def).map(([key, def]) => h(
+    "div",
+    { class: "yx-opt" },
+    h("label", null, tr(def.title) || key, def.hint ? h("span", { class: "yx-hint" }, tr(def.hint)) : null),
+    control(settings3.store, key, def)
+  ));
   function renderPlugins(box) {
-    const search = h("input", { class: "yx-search", type: "text", placeholder: "Поиск плагинов…" });
+    const search = h("input", { class: "yx-search", type: "text", placeholder: t("search") });
     const list = h("div");
     box.append(search, list);
     const draw = () => {
       const q = search.value.trim().toLowerCase();
       list.textContent = "";
-      const shown = [...plugins].sort((a, b) => a.name.localeCompare(b.name)).filter((p) => !q || (p.name + " " + (p.title || "") + " " + (p.description || "")).toLowerCase().includes(q));
-      if (!shown.length) list.append(h("div", { class: "yx-empty" }, "Ничего не найдено"));
+      const shown = [...plugins].sort((a, b) => a.name.localeCompare(b.name)).filter((p) => !q || (p.name + " " + tr(p.title) + " " + tr(p.description)).toLowerCase().includes(q));
+      if (!shown.length) list.append(h("div", { class: "yx-empty" }, t("nothing")));
       shown.forEach((p) => {
-        const opts = h("div", { class: "yx-opts", hidden: true });
-        if (p.settings) {
-          Object.entries(p.settings.def).forEach(([key, def]) => {
-            opts.append(h("div", { class: "yx-opt" }, h("label", null, def.title || key), control(p.settings.store, key, def)));
-          });
-        }
-        const gear = p.settings ? iconBtn("Настройки плагина", I.tune, false, () => {
+        const opts = h("div", { class: "yx-opts", hidden: true }, p.settings ? optionRows(p.settings) : null);
+        const gear = p.settings ? iconBtn(t("pluginSettings"), I.tune, false, () => {
           opts.hidden = !opts.hidden;
         }) : null;
         list.append(h(
@@ -299,8 +427,8 @@
             h(
               "div",
               { class: "yx-pinfo" },
-              h("div", { class: "yx-pname" }, p.title || p.name),
-              h("div", { class: "yx-pdesc" }, p.description || "")
+              h("div", { class: "yx-pname" }, tr(p.title) || p.name),
+              h("div", { class: "yx-pdesc" }, tr(p.description))
             ),
             gear,
             sw(isEnabled(p), (v) => setEnabled(p, v))
@@ -330,7 +458,7 @@
         try {
           cb(JSON.parse(r.result));
         } catch (e) {
-          toast("Не получилось прочитать файл: " + e.message);
+          toast(t("readErr") + e.message);
         }
       };
       r.readAsText(f);
@@ -344,39 +472,52 @@
       h("button", {
         type: "button",
         onclick: () => downloadText("yorux-settings-" + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + ".json", JSON.stringify(exportConfig(), null, 2))
-      }, "Экспорт настроек"),
+      }, t("export")),
       h("button", {
         type: "button",
         onclick: () => pickJson((o) => {
           importConfig(o);
-          toast("Настройки импортированы");
+          toast(t("imported"));
         })
-      }, "Импорт настроек"),
+      }, t("import")),
       h("button", {
         type: "button",
         class: "yx-danger",
         onclick: () => {
-          if (confirm("Сбросить включённые плагины и их настройки? Данные плагинов (например, избранные GIF) не затрагиваются.")) {
+          if (confirm(t("confirmReset"))) {
             resetConfig();
-            toast("Настройки сброшены");
+            toast(t("resetDone"));
           }
         }
-      }, "Сбросить")
+      }, t("reset"))
     ));
+  }
+  function renderGeneral(box) {
+    box.append(
+      h("div", { class: "yx-opts" }, optionRows(settings)),
+      h(
+        "div",
+        { class: "yx-btns" },
+        h("button", { type: "button", onclick: () => window.open("https://github.com/SevaGetz/YoruX", "_blank") }, t("repo")),
+        h("button", { type: "button", onclick: () => window.open("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js", "_blank") }, t("update"))
+      ),
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.0")
+    );
   }
   function getPages() {
     const on = plugins.filter(isEnabled).length;
     const pages = [
-      { id: "plugins", icon: I.plugins, title: "Плагины", desc: on + " из " + plugins.length + " включено", render: renderPlugins }
+      { id: "general", icon: I.tune, title: t("general"), desc: t("generalDesc"), render: renderGeneral },
+      { id: "plugins", icon: I.plugins, title: t("plugins"), desc: t("pluginsDesc", { n: on, m: plugins.length }), render: renderPlugins }
     ];
     plugins.filter((p) => p.started && p.tile).forEach((p) => pages.push({
       id: "plugin:" + p.name,
       icon: p.tile.icon || I.star,
-      title: p.tile.title,
-      desc: p.tile.desc ? p.tile.desc() : "",
+      title: tr(p.tile.title),
+      desc: tr(p.tile.desc),
       render: p.tile.render
     }));
-    pages.push({ id: "backup", icon: I.backup, title: "Резервная копия", desc: "Экспорт и импорт настроек", render: renderBackup });
+    pages.push({ id: "backup", icon: I.backup, title: t("backup"), desc: t("backupDesc"), render: renderBackup });
     return pages;
   }
   function openSettings(pageId) {
@@ -389,7 +530,7 @@
     box.dataset.theme = (r * 299 + g * 587 + b * 114) / 1e3 > 128 ? "light" : "dark";
     box.style.background = bg;
     box.style.color = cs.color;
-    const back = iconBtn("Назад", I.back, true, () => show(null));
+    const back = iconBtn(t("back"), I.back, true, () => show(null));
     back.hidden = true;
     const title = h("h2", null, "YoruX");
     const body = h("div", { class: "yx-body" });
@@ -400,14 +541,19 @@
         back,
         title,
         h("span", { class: "yx-ver" }, "v0.8.0"),
-        iconBtn("Закрыть", I.close, true, () => close())
+        iconBtn(t("close"), I.close, true, () => close())
       ),
       body
     );
     ov.appendChild(box);
     document.body.appendChild(ov);
     let cleanup = null;
+    let current = null;
     function show(id) {
+      current = id;
+      back.title = t("back");
+      const xb = box.querySelector(".yx-head .yx-icon:last-child");
+      if (xb) xb.title = t("close");
       if (cleanup) {
         try {
           cleanup();
@@ -431,6 +577,7 @@
       back.hidden = false;
       cleanup = page.render(body) || null;
     }
+    const offLang = onLangChange(() => show(current));
     const onKey = (e) => {
       if (e.key === "Escape") {
         e.stopPropagation();
@@ -445,6 +592,7 @@
         }
       }
       ov.remove();
+      offLang();
       document.removeEventListener("keydown", onKey, true);
     }
     document.addEventListener("keydown", onKey, true);
@@ -454,16 +602,72 @@
     show(pageId || null);
   }
 
+  // src/plugins/gifFav/i18n.js
+  var t2 = createT({
+    ru: {
+      title: "Избранные GIF",
+      desc: "Вкладка «Избранное» в пикере GIF, звёздочки на GIF в пикере и в твитах, конвертация mp4 → GIF при отправке",
+      optConvert: "Конвертировать GIF из твитов (mp4) в настоящий .gif при отправке",
+      optMaxW: "Макс. ширина GIF при конвертации",
+      optClose: "Закрывать окно выбора GIF после выбора",
+      count: "{n} шт.",
+      total: "Всего: {n}",
+      all: "Все",
+      favTab: "★ Избранное",
+      addFav: "В избранное",
+      delFav: "Убрать из избранного",
+      empty: "Пока пусто. Наведи на GIF (в пикере или в твите) и нажми ★",
+      export: "Экспорт",
+      import: "Импорт",
+      clear: "Очистить всё",
+      confirmClear: "Удалить все GIF из избранного? Это нельзя отменить.",
+      imported: "Импортировано: {n}",
+      notArray: "не массив",
+      loading: "Загружаю GIF…",
+      dlFail: "Не удалось скачать GIF",
+      noTarget: "Не нашёл ни поле загрузки, ни поле ввода. Подробности в консоли (F12).",
+      converting: "Конвертирую в GIF…",
+      convFail: "Не получилось конвертировать, отправляю как видео",
+      netErr: "Ошибка сети при скачивании GIF"
+    },
+    en: {
+      title: "Favorite GIFs",
+      desc: 'A "Favorites" tab in the GIF picker, stars on GIFs in the picker and in tweets, mp4 → GIF conversion on send',
+      optConvert: "Convert GIFs from tweets (mp4) to a real .gif when sending",
+      optMaxW: "Max GIF width when converting",
+      optClose: "Close the GIF picker after choosing",
+      count: "{n} items",
+      total: "Total: {n}",
+      all: "All",
+      favTab: "★ Favorites",
+      addFav: "Add to favorites",
+      delFav: "Remove from favorites",
+      empty: "Nothing here yet. Hover a GIF (in the picker or in a tweet) and click ★",
+      export: "Export",
+      import: "Import",
+      clear: "Clear all",
+      confirmClear: "Delete all favorite GIFs? This cannot be undone.",
+      imported: "Imported: {n}",
+      notArray: "not an array",
+      loading: "Downloading GIF…",
+      dlFail: "Could not download the GIF",
+      noTarget: "Could not find an upload field or composer. See the console (F12) for details.",
+      converting: "Converting to GIF…",
+      convFail: "Conversion failed, sending as video",
+      netErr: "Network error while downloading the GIF"
+    }
+  });
+
   // src/plugins/gifFav/settings.js
-  var settings = definePluginSettings({
-    convert: { type: "boolean", title: "Конвертировать GIF из твитов (mp4) в настоящий .gif при отправке", default: true },
-    maxW: { type: "select", title: "Макс. ширина GIF при конвертации", default: 400, choices: [
+  var settings2 = definePluginSettings({
+    convert: { type: "boolean", title: () => t2("optConvert"), default: true },
+    maxW: { type: "select", title: () => t2("optMaxW"), default: 400, choices: [
       { value: 220, label: "220 px" },
       { value: 300, label: "300 px" },
       { value: 400, label: "400 px" },
       { value: 480, label: "480 px" }
     ] },
-    closeAfter: { type: "boolean", title: "Закрывать окно выбора GIF после выбора", default: true }
+    closeAfter: { type: "boolean", title: () => t2("optClose"), default: true }
   });
 
   // src/plugins/gifFav/styles.js
@@ -494,7 +698,7 @@
 
   // src/plugins/gifFav/store.js
   var KEY = "gifFavs";
-  var subs = /* @__PURE__ */ new Set();
+  var subs2 = /* @__PURE__ */ new Set();
   var isHttp = (u) => typeof u === "string" && /^https?:/.test(u);
   var load = () => {
     const a = read(KEY, []);
@@ -502,12 +706,12 @@
   };
   var has = (u) => load().some((f) => f.url === u);
   var subscribe = (cb) => {
-    subs.add(cb);
-    return () => subs.delete(cb);
+    subs2.add(cb);
+    return () => subs2.delete(cb);
   };
   function save(a) {
     write(KEY, a);
-    subs.forEach((f) => f());
+    subs2.forEach((f) => f());
   }
   function toggle(item) {
     if (!item || !item.url) return;
@@ -518,7 +722,7 @@
     save(a);
   }
   function importItems(arr) {
-    if (!Array.isArray(arr)) throw new Error("не массив");
+    if (!Array.isArray(arr)) throw new Error(t2("notArray"));
     const cur = load();
     let added = 0;
     arr.forEach((it) => {
@@ -537,12 +741,12 @@
     const favs = load();
     if (!favs.length) {
       const e = el("div", "fav-empty");
-      e.textContent = "Пока пусто. Наведи на GIF (в пикере или в твите) и нажми ★";
+      e.textContent = t2("empty");
       panel.appendChild(e);
       return;
     }
     favs.forEach((item) => {
-      const t = el("div", "fav-tile");
+      const t3 = el("div", "fav-tile");
       let m;
       if (item.type === "video") {
         m = el("video");
@@ -564,14 +768,14 @@
               io.disconnect();
             }
           }, { root: panel });
-          io.observe(t);
+          io.observe(t3);
         }
-        t.addEventListener("mouseenter", () => {
+        t3.addEventListener("mouseenter", () => {
           loadVideo();
           m.play().catch(() => {
           });
         });
-        t.addEventListener("mouseleave", () => m.pause());
+        t3.addEventListener("mouseleave", () => m.pause());
       } else {
         m = el("img");
         m.loading = "lazy";
@@ -580,15 +784,15 @@
       const del = el("button", "fav-del");
       del.type = "button";
       del.textContent = "★";
-      del.title = "Убрать из избранного";
+      del.title = t3("delFav");
       del.onclick = (e) => {
         e.stopPropagation();
         toggle(item);
       };
-      t.append(m, del);
-      if (onPick) t.onclick = () => onPick(item);
-      else t.style.cursor = "default";
-      panel.appendChild(t);
+      t3.append(m, del);
+      if (onPick) t3.onclick = () => onPick(item);
+      else t3.style.cursor = "default";
+      panel.appendChild(t3);
     });
   }
 
@@ -786,12 +990,12 @@
           const n = Math.max(1, Math.min(120, Math.floor(dur / step)));
           const frames = [];
           for (let i = 0; i < n; i++) {
-            const t = Math.min(i * step, Math.max(0, dur - 0.05));
-            if (Math.abs(v.currentTime - t) > 1e-3) {
+            const t3 = Math.min(i * step, Math.max(0, dur - 0.05));
+            if (Math.abs(v.currentTime - t3) > 1e-3) {
               await new Promise((res) => {
                 v.onseeked = res;
                 setTimeout(res, 3e3);
-                v.currentTime = t;
+                v.currentTime = t3;
               });
             }
             ctx.drawImage(v, 0, 0, w, h2);
@@ -869,7 +1073,7 @@
     else document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", keyCode: 27, bubbles: true }));
   }
   function pick(item, d) {
-    toast("Загружаю GIF…");
+    toast(t2("loading"));
     GM_xmlhttpRequest({
       method: "GET",
       url: item.url,
@@ -877,22 +1081,22 @@
       onload: (r) => {
         const blob = r.response;
         if (!blob || !blob.size) {
-          toast("Не удалось скачать GIF");
+          toast(t2("dlFail"));
           return;
         }
         const finish = (file) => {
           if (!attachFile(file, d)) {
-            toast("Не нашёл ни поле загрузки, ни поле ввода. Подробности в консоли (F12).");
+            toast(t2("noTarget"));
             return;
           }
-          if (settings.store.closeAfter) setTimeout(() => closeDialog(d), 300);
+          if (settings2.store.closeAfter) setTimeout(() => closeDialog(d), 300);
         };
         const type = blob.type || (item.type === "video" ? "video/mp4" : "image/gif");
-        if (/^video\//.test(type) && settings.store.convert) {
-          toast("Конвертирую в GIF…");
-          mp4ToGif(blob, settings.store.maxW).then((bytes) => finish(new File([bytes], "favorite.gif", { type: "image/gif" }))).catch((e) => {
+        if (/^video\//.test(type) && settings2.store.convert) {
+          toast(t2("converting"));
+          mp4ToGif(blob, settings2.store.maxW).then((bytes) => finish(new File([bytes], "favorite.gif", { type: "image/gif" }))).catch((e) => {
             LOG("конвертация в GIF не удалась, отправляю как видео:", e);
-            toast("Не получилось конвертировать, отправляю как видео");
+            toast(t2("convFail"));
             finish(new File([blob], "favorite.mp4", { type }));
           });
           return;
@@ -900,7 +1104,7 @@
         const ext = { "video/mp4": "mp4", "image/gif": "gif", "image/webp": "webp", "image/png": "png", "image/jpeg": "jpg" }[type] || "gif";
         finish(new File([blob], "favorite." + ext, { type }));
       },
-      onerror: () => toast("Ошибка сети при скачивании GIF")
+      onerror: () => toast(t2("netErr"))
     });
   }
 
@@ -931,7 +1135,7 @@
       host.classList.add("fav-host");
       b = el("span", "fav-star");
       b.textContent = "★";
-      b.title = "В избранное";
+      b.title = t2("addFav");
       host.appendChild(b);
     }
     nodeOf.set(b, node);
@@ -1009,10 +1213,10 @@
     const bar = el("div", "fav-bar");
     const bAll = el("button");
     bAll.type = "button";
-    bAll.textContent = "Все";
+    bAll.textContent = t2("all");
     const bFav = el("button");
     bFav.type = "button";
-    bFav.textContent = "★ Избранное";
+    bFav.textContent = t2("favTab");
     bar.append(bAll, bFav);
     const panel = el("div", "fav-panel");
     panel.hidden = true;
@@ -1100,7 +1304,7 @@
     if (read("yorux:migrated:gifFav", false)) return;
     const old = read("gifFavSettings", null);
     if (old) ["convert", "maxW", "closeAfter"].forEach((k) => {
-      if (k in old) settings.store[k] = old[k];
+      if (k in old) settings2.store[k] = old[k];
     });
     write("yorux:migrated:gifFav", true);
   }
@@ -1108,7 +1312,7 @@
     const grid = h("div", { class: "fav-panel" });
     const count = h("span");
     const refresh = () => {
-      count.textContent = "Всего: " + load().length;
+      count.textContent = t2("total", { n: load().length });
       fillPanel(grid, null);
     };
     refresh();
@@ -1122,35 +1326,35 @@
         h("button", {
           type: "button",
           onclick: () => downloadText("yorux-gifs-" + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + ".json", JSON.stringify(load(), null, 2))
-        }, "Экспорт"),
+        }, t2("export")),
         h("button", {
           type: "button",
           onclick: () => pickJson((arr) => {
-            toast("Импортировано: " + importItems(arr));
+            toast(t2("imported", { n: importItems(arr) }));
           })
-        }, "Импорт"),
+        }, t2("import")),
         h("button", {
           type: "button",
           class: "yx-danger",
           onclick: () => {
-            if (load().length && confirm("Удалить все GIF из избранного? Это нельзя отменить.")) save([]);
+            if (load().length && confirm(t2("confirmClear"))) save([]);
           }
-        }, "Очистить всё")
+        }, t2("clear"))
       )
     );
     return unsub2;
   }
   var gifFav_default = definePlugin({
     name: "gifFav",
-    title: "Избранные GIF",
-    description: "Вкладка «Избранное» в пикере GIF, звёздочки на GIF в пикере и в твитах, конвертация mp4 → GIF при отправке",
+    title: () => t2("title"),
+    description: () => t2("desc"),
     enabledByDefault: true,
-    settings,
+    settings: settings2,
     styles: CSS,
     tile: {
       icon: '<path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85z"/>',
-      title: "Избранные GIF",
-      desc: () => load().length + " шт.",
+      title: () => t2("title"),
+      desc: () => t2("count", { n: load().length }),
       render: renderManager
     },
     start() {
@@ -1169,6 +1373,10 @@
   // src/core/ui/menu.js
   var STAR_PATH = "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
   function injectMenu(roots) {
+    if (!settings.store.menuItem) {
+      qAll(roots, ".yx-menu-item").forEach((n) => n.remove());
+      return;
+    }
     qAll(roots, '[role="menu"]').forEach((menu) => {
       if (menu.querySelector(".yx-menu-item")) return;
       const link = menu.querySelector('a[data-testid="settings"], a[href="/settings"]');
@@ -1288,6 +1496,7 @@
   .yx-sw span::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
   .yx-sw input:checked + span{background:#1d9bf0}
   .yx-sw input:checked + span::after{transform:translateX(16px)}
+  .yx-hint{display:block;color:var(--yx-sub);font-size:13px;line-height:16px;margin-top:2px}
   .yx-empty{color:var(--yx-sub);text-align:center;padding:32px 0}
   .yx-menu-item{cursor:pointer}
   .yx-toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);z-index:2147483647;background:#1d9bf0;color:#fff;
@@ -1300,4 +1509,5 @@
   registerPlugins(plugins_default);
   watchMenu();
   initScanner();
+  if (typeof GM_registerMenuCommand === "function") GM_registerMenuCommand("YoruX", () => openSettings());
 })();

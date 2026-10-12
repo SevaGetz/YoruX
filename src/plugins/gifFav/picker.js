@@ -2,6 +2,7 @@ import { LOG, el, getRoots, getSeenRoots, qAll } from '@core/dom';
 import { has, isHttp, subscribe, toggle } from './store';
 import { fillPanel } from './panel';
 import { pick } from './send';
+import { t } from './i18n';
 
 const nodeOf = new WeakMap(); // star -> media node
 const stateOf = new WeakMap(); // dialog -> picker state
@@ -34,7 +35,7 @@ function addStar(host, node) {
     host.classList.add('fav-host');
     b = el('span', 'fav-star');
     b.textContent = '★';
-    b.title = 'В избранное';
+    b.title = t('addFav');
     host.appendChild(b);
   }
   nodeOf.set(b, node);
@@ -122,8 +123,8 @@ function setupPicker(d) {
   if (!sc || !sc.parentElement) return null;
 
   const bar = el('div', 'fav-bar');
-  const bAll = el('button'); bAll.type = 'button'; bAll.textContent = 'Все';
-  const bFav = el('button'); bFav.type = 'button'; bFav.textContent = '★ Избранное';
+  const bAll = el('button'); bAll.type = 'button'; bAll.textContent = t('all');
+  const bFav = el('button'); bFav.type = 'button'; bFav.textContent = t('favTab');
   bar.append(bAll, bFav);
   const panel = el('div', 'fav-panel');
   panel.hidden = true;

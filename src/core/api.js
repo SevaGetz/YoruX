@@ -1,5 +1,6 @@
 import { read, write } from './storage';
 import { LOG, addStyle, removeStyle } from './dom';
+import { t } from './i18n';
 
 const ENABLED_KEY = 'yorux:enabled';
 const optsKey = (n) => 'yorux:opts:' + n;
@@ -7,6 +8,7 @@ const optsKey = (n) => 'yorux:opts:' + n;
 export const plugins = [];
 const listeners = new Set();
 export const onPluginsChange = (cb) => { listeners.add(cb); return () => listeners.delete(cb); };
+export const notify = () => emit();
 const emit = () => listeners.forEach((f) => { try { f(); } catch (e) { console.error(e); } });
 
 /* ---------- настройки плагина ---------- */
@@ -30,11 +32,17 @@ export function definePluginSettings(def) {
       const saved = { ...getOpts(owner.name), [key]: value };
       optCache.set(owner.name, saved);
       write(optsKey(owner.name), saved);
+      if (def[key] && def[key].onChange) def[key].onChange(value);
       return true;
     },
   });
   return { def, store, owner };
 }
+
+// настройки самого YoruX (не плагин): входят в резервную копию
+const extras = [];
+export const registerCoreSettings = (name, settings) => { settings.owner.name = name; extras.push({ name, settings }); };
+const withSettings = () => [...extras, ...plugins].filter((p) => p.settings);
 
 /* ---------- плагины ---------- */
 // definePlugin({ name, title, description, enabledByDefault, settings, styles, tile, start, stop, scan })
@@ -87,14 +95,13 @@ export function registerPlugins(list) {
 export const exportConfig = () => ({
   yorux: 1,
   enabled: enabledMap(),
-  options: Object.fromEntries(plugins.filter((p) => p.settings).map((p) => [p.name, { ...getOpts(p.name) }])),
+  options: Object.fromEntries(withSettings().map((p) => [p.name, { ...getOpts(p.name) }])),
 });
 
 export function importConfig(obj) {
-  if (!obj || obj.yorux !== 1) throw new Error('это не файл настроек YoruX');
+  if (!obj || obj.yorux !== 1) throw new Error(t('notYorux'));
   write(ENABLED_KEY, obj.enabled || {});
-  plugins.forEach((p) => {
-    if (!p.settings) return;
+  withSettings().forEach((p) => {
     const o = (obj.options && obj.options[p.name]) || {};
     optCache.set(p.name, o);
     write(optsKey(p.name), o);
@@ -104,8 +111,7 @@ export function importConfig(obj) {
 
 export function resetConfig() {
   write(ENABLED_KEY, {});
-  plugins.forEach((p) => {
-    if (!p.settings) return;
+  withSettings().forEach((p) => {
     optCache.set(p.name, {});
     write(optsKey(p.name), {});
   });

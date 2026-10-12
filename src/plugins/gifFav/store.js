@@ -1,4 +1,5 @@
 import { read, write } from '@core/storage';
+import { t } from './i18n';
 
 const KEY = 'gifFavs'; // тот же ключ, что в старом скрипте — избранное сохраняется
 const subs = new Set();
@@ -23,7 +24,7 @@ export function toggle(item) {
 }
 
 export function importItems(arr) {
-  if (!Array.isArray(arr)) throw new Error('не массив');
+  if (!Array.isArray(arr)) throw new Error(t('notArray'));
   const cur = load();
   let added = 0;
   arr.forEach((it) => {

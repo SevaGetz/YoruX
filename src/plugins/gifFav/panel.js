@@ -1,12 +1,13 @@
 import { el } from '@core/dom';
 import { load, toggle } from './store';
+import { t } from './i18n';
 
 export function fillPanel(panel, onPick) {
   panel.textContent = '';
   const favs = load();
   if (!favs.length) {
     const e = el('div', 'fav-empty');
-    e.textContent = 'Пока пусто. Наведи на GIF (в пикере или в твите) и нажми ★';
+    e.textContent = t('empty');
     panel.appendChild(e);
     return;
   }
@@ -36,7 +37,7 @@ export function fillPanel(panel, onPick) {
       m.src = item.preview || item.url;
     }
     const del = el('button', 'fav-del');
-    del.type = 'button'; del.textContent = '★'; del.title = 'Убрать из избранного';
+    del.type = 'button'; del.textContent = '★'; del.title = t('delFav');
     del.onclick = (e) => { e.stopPropagation(); toggle(item); };
     t.append(m, del);
     if (onPick) t.onclick = () => onPick(item);

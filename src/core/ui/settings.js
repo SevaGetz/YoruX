@@ -1,5 +1,7 @@
 import { h, toast } from '../dom';
 import { plugins, isEnabled, setEnabled, exportConfig, importConfig, resetConfig } from '../api';
+import { t, tr, onLangChange } from '../i18n';
+import { settings as general } from '../general';
 
 /* ---------- иконки (контурные, как в меню X) ---------- */
 const ico = (inner, fill) => h('span', {
@@ -29,7 +31,7 @@ function control(store, key, def) {
   if (def.type === 'boolean') return sw(cur, (v) => { store[key] = v; });
   if (def.type === 'select') {
     const choices = def.choices.map((c) => (typeof c === 'object' ? c : { value: c, label: String(c) }));
-    const s = h('select', null, choices.map((c) => h('option', { value: String(c.value) }, c.label)));
+    const s = h('select', null, choices.map((c) => h('option', { value: String(c.value) }, tr(c.label))));
     s.value = String(cur);
     s.addEventListener('change', () => { store[key] = choices.find((c) => String(c.value) === s.value).value; });
     return s;
@@ -44,9 +46,13 @@ function control(store, key, def) {
   return i;
 }
 
+const optionRows = (settings) => Object.entries(settings.def).map(([key, def]) => h('div', { class: 'yx-opt' },
+  h('label', null, tr(def.title) || key, def.hint ? h('span', { class: 'yx-hint' }, tr(def.hint)) : null),
+  control(settings.store, key, def)));
+
 /* ---------- страница «Плагины» ---------- */
 function renderPlugins(box) {
-  const search = h('input', { class: 'yx-search', type: 'text', placeholder: 'Поиск плагинов…' });
+  const search = h('input', { class: 'yx-search', type: 'text', placeholder: t('search') });
   const list = h('div');
   box.append(search, list);
 
@@ -55,21 +61,16 @@ function renderPlugins(box) {
     list.textContent = '';
     const shown = [...plugins]
       .sort((a, b) => a.name.localeCompare(b.name))
-      .filter((p) => !q || (p.name + ' ' + (p.title || '') + ' ' + (p.description || '')).toLowerCase().includes(q));
-    if (!shown.length) list.append(h('div', { class: 'yx-empty' }, 'Ничего не найдено'));
+      .filter((p) => !q || (p.name + ' ' + tr(p.title) + ' ' + tr(p.description)).toLowerCase().includes(q));
+    if (!shown.length) list.append(h('div', { class: 'yx-empty' }, t('nothing')));
     shown.forEach((p) => {
-      const opts = h('div', { class: 'yx-opts', hidden: true });
-      if (p.settings) {
-        Object.entries(p.settings.def).forEach(([key, def]) => {
-          opts.append(h('div', { class: 'yx-opt' }, h('label', null, def.title || key), control(p.settings.store, key, def)));
-        });
-      }
-      const gear = p.settings ? iconBtn('Настройки плагина', I.tune, false, () => { opts.hidden = !opts.hidden; }) : null;
+      const opts = h('div', { class: 'yx-opts', hidden: true }, p.settings ? optionRows(p.settings) : null);
+      const gear = p.settings ? iconBtn(t('pluginSettings'), I.tune, false, () => { opts.hidden = !opts.hidden; }) : null;
       list.append(h('div', { class: 'yx-plugin' },
         h('div', { class: 'yx-prow' },
           h('div', { class: 'yx-pinfo' },
-            h('div', { class: 'yx-pname' }, p.title || p.name),
-            h('div', { class: 'yx-pdesc' }, p.description || '')),
+            h('div', { class: 'yx-pname' }, tr(p.title) || p.name),
+            h('div', { class: 'yx-pdesc' }, tr(p.description))),
           gear,
           sw(isEnabled(p), (v) => setEnabled(p, v))),
         opts));
@@ -93,7 +94,7 @@ export function pickJson(cb) {
     const f = inp.files && inp.files[0];
     if (!f) return;
     const r = new FileReader();
-    r.onload = () => { try { cb(JSON.parse(r.result)); } catch (e) { toast('Не получилось прочитать файл: ' + e.message); } };
+    r.onload = () => { try { cb(JSON.parse(r.result)); } catch (e) { toast(t('readErr') + e.message); } };
     r.readAsText(f);
   };
   inp.click();
@@ -104,31 +105,42 @@ function renderBackup(box) {
     h('button', {
       type: 'button',
       onclick: () => downloadText('yorux-settings-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(exportConfig(), null, 2)),
-    }, 'Экспорт настроек'),
+    }, t('export')),
     h('button', {
       type: 'button',
-      onclick: () => pickJson((o) => { importConfig(o); toast('Настройки импортированы'); }),
-    }, 'Импорт настроек'),
+      onclick: () => pickJson((o) => { importConfig(o); toast(t('imported')); }),
+    }, t('import')),
     h('button', {
       type: 'button', class: 'yx-danger',
-      onclick: () => { if (confirm('Сбросить включённые плагины и их настройки? Данные плагинов (например, избранные GIF) не затрагиваются.')) { resetConfig(); toast('Настройки сброшены'); } },
-    }, 'Сбросить')));
+      onclick: () => { if (confirm(t('confirmReset'))) { resetConfig(); toast(t('resetDone')); } },
+    }, t('reset'))));
+}
+
+/* ---------- страница «Общие» ---------- */
+function renderGeneral(box) {
+  box.append(
+    h('div', { class: 'yx-opts' }, optionRows(general)),
+    h('div', { class: 'yx-btns' },
+      h('button', { type: 'button', onclick: () => window.open('https://github.com/' + __REPO__, '_blank') }, t('repo')),
+      h('button', { type: 'button', onclick: () => window.open(__RAW__, '_blank') }, t('update'))),
+    h('div', { class: 'yx-hint', style: { paddingTop: '12px' } }, t('version') + ': v' + __VERSION__));
 }
 
 /* ---------- плитки ---------- */
 function getPages() {
   const on = plugins.filter(isEnabled).length;
   const pages = [
-    { id: 'plugins', icon: I.plugins, title: 'Плагины', desc: on + ' из ' + plugins.length + ' включено', render: renderPlugins },
+    { id: 'general', icon: I.tune, title: t('general'), desc: t('generalDesc'), render: renderGeneral },
+    { id: 'plugins', icon: I.plugins, title: t('plugins'), desc: t('pluginsDesc', { n: on, m: plugins.length }), render: renderPlugins },
   ];
   plugins.filter((p) => p.started && p.tile).forEach((p) => pages.push({
     id: 'plugin:' + p.name,
     icon: p.tile.icon || I.star,
-    title: p.tile.title,
-    desc: p.tile.desc ? p.tile.desc() : '',
+    title: tr(p.tile.title),
+    desc: tr(p.tile.desc),
     render: p.tile.render,
   }));
-  pages.push({ id: 'backup', icon: I.backup, title: 'Резервная копия', desc: 'Экспорт и импорт настроек', render: renderBackup });
+  pages.push({ id: 'backup', icon: I.backup, title: t('backup'), desc: t('backupDesc'), render: renderBackup });
   return pages;
 }
 
@@ -144,19 +156,24 @@ export function openSettings(pageId) {
   box.style.background = bg;
   box.style.color = cs.color;
 
-  const back = iconBtn('Назад', I.back, true, () => show(null));
+  const back = iconBtn(t('back'), I.back, true, () => show(null));
   back.hidden = true;
   const title = h('h2', null, 'YoruX');
   const body = h('div', { class: 'yx-body' });
   box.append(
     h('div', { class: 'yx-head' }, back, title, h('span', { class: 'yx-ver' }, 'v' + __VERSION__),
-      iconBtn('Закрыть', I.close, true, () => close())),
+      iconBtn(t('close'), I.close, true, () => close())),
     body);
   ov.appendChild(box);
   document.body.appendChild(ov);
 
   let cleanup = null;
+  let current = null;
   function show(id) {
+    current = id;
+    back.title = t('back');
+    const xb = box.querySelector('.yx-head .yx-icon:last-child');
+    if (xb) xb.title = t('close');
     if (cleanup) { try { cleanup(); } catch (e) {} cleanup = null; }
     body.textContent = '';
     const page = getPages().find((p) => p.id === id);
@@ -173,10 +190,12 @@ export function openSettings(pageId) {
     cleanup = page.render(body) || null;
   }
 
+  const offLang = onLangChange(() => show(current));
   const onKey = (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
   function close() {
     if (cleanup) { try { cleanup(); } catch (e) {} }
     ov.remove();
+    offLang();
     document.removeEventListener('keydown', onKey, true);
   }
   document.addEventListener('keydown', onKey, true);

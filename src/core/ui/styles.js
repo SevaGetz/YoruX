@@ -48,6 +48,7 @@ export const CORE_CSS = `
   .yx-sw span::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .15s}
   .yx-sw input:checked + span{background:#1d9bf0}
   .yx-sw input:checked + span::after{transform:translateX(16px)}
+  .yx-hint{display:block;color:var(--yx-sub);font-size:13px;line-height:16px;margin-top:2px}
   .yx-empty{color:var(--yx-sub);text-align:center;padding:32px 0}
   .yx-menu-item{cursor:pointer}
   .yx-toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);z-index:2147483647;background:#1d9bf0;color:#fff;

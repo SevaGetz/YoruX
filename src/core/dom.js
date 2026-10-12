@@ -1,4 +1,6 @@
-export const LOG = (...a) => console.log('[YoruX]', ...a);
+let debug = false;
+export const setDebug = (v) => { debug = !!v; };
+export const LOG = (...a) => { if (debug) console.log('[YoruX]', ...a); };
 
 /* ---------- мини-конструктор DOM ---------- */
 export function h(tag, props, ...kids) {
