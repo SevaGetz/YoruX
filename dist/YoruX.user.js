@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.5
+// @version      0.8.6
 // @description  YoruX: модульный мод для X/Twitter с плагинами
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -53,8 +53,13 @@
     return e;
   }
   var el = (tag, cls) => h(tag, cls ? { class: cls } : null);
+  function xFont() {
+    const ref = document.querySelector('[data-testid="primaryColumn"]') || document.querySelector("#react-root") || document.body;
+    const ff = getComputedStyle(ref).fontFamily;
+    return ff && !/^\s*(Times|serif)/i.test(ff) ? ff : 'TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  }
   function toast(msg) {
-    const t3 = h("div", { class: "yx-toast" }, msg);
+    const t3 = h("div", { class: "yx-toast", style: { fontFamily: xFont() } }, msg);
     document.body.appendChild(t3);
     setTimeout(() => t3.remove(), 3500);
   }
@@ -501,7 +506,7 @@
         h("button", { type: "button", onclick: () => window.open("https://github.com/SevaGetz/YoruX", "_blank") }, t("repo")),
         h("button", { type: "button", onclick: () => window.open("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js", "_blank") }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.5")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.6")
     );
   }
   function getPages() {
@@ -530,6 +535,7 @@
     box.dataset.theme = (r * 299 + g * 587 + b * 114) / 1e3 > 128 ? "light" : "dark";
     box.style.background = bg;
     box.style.color = cs.color;
+    box.style.fontFamily = xFont();
     box.style.setProperty("--yx-bg", bg);
     box.style.setProperty("--yx-fg", cs.color);
     const back = iconBtn(t("back"), I.back, true, () => show(null));
@@ -542,7 +548,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.5"),
+        h("span", { class: "yx-ver" }, "v0.8.6"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -1453,11 +1459,12 @@
   .yx-ov{position:fixed;inset:0;z-index:2147483646;background:rgba(91,112,131,.4);display:flex;align-items:center;justify-content:center}
   .yx-modal{--yx-sub:#71767b;--yx-line:#2f3336;--yx-ctl:#536471;--yx-hover:rgba(231,233,234,.1);--yx-pbg:#eff3f4;--yx-pfg:#0f1419;
     width:min(600px,94vw);height:min(640px,90vh);display:flex;flex-direction:column;border-radius:16px;box-sizing:border-box;
-    font-family:inherit;font-size:15px;overflow:hidden;box-shadow:0 0 15px rgba(255,255,255,.2),0 0 3px rgba(255,255,255,.15),0 0 8px rgba(255,255,255,.15)}
+    font-size:15px;-webkit-font-smoothing:antialiased;overflow:hidden;box-shadow:0 0 15px rgba(255,255,255,.2),0 0 3px rgba(255,255,255,.15),0 0 8px rgba(255,255,255,.15)}
   .yx-modal[data-theme=light]{--yx-sub:#536471;--yx-line:#eff3f4;--yx-ctl:#cfd9de;--yx-hover:rgba(15,20,25,.1);--yx-pbg:#0f1419;--yx-pfg:#fff;
     box-shadow:0 0 15px rgba(101,119,134,.2),0 0 3px rgba(101,119,134,.15),0 0 8px rgba(101,119,134,.15)}
   .yx-modal [hidden]{display:none !important}
   .yx-modal svg{display:block}
+  .yx-modal button,.yx-modal input,.yx-modal select{font-family:inherit}
   .yx-head{display:flex;align-items:center;gap:20px;height:53px;padding:0 16px;flex:none}
   .yx-head h2{margin:0;font-size:20px;line-height:24px;font-weight:800;flex:1}
   .yx-ver{color:var(--yx-sub);font-size:13px}
@@ -1508,7 +1515,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.5", location.href);
+  LOG("loaded v0.8.6", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   watchMenu();
