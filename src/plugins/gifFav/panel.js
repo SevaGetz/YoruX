@@ -12,7 +12,7 @@ export function fillPanel(panel, onPick) {
     return;
   }
   favs.forEach((item) => {
-    const t = el('div', 'fav-tile');
+    const tile = el('div', 'fav-tile');
     let m;
     if (item.type === 'video') {
       // mp4 не качаем заранее: есть постер — грузим видео только при наведении,
@@ -27,10 +27,10 @@ export function fillPanel(panel, onPick) {
         const io = new IntersectionObserver((es) => {
           if (es.some((e) => e.isIntersecting)) { loadVideo(); io.disconnect(); }
         }, { root: panel });
-        io.observe(t);
+        io.observe(tile);
       }
-      t.addEventListener('mouseenter', () => { loadVideo(); m.play().catch(() => {}); });
-      t.addEventListener('mouseleave', () => m.pause());
+      tile.addEventListener('mouseenter', () => { loadVideo(); m.play().catch(() => {}); });
+      tile.addEventListener('mouseleave', () => m.pause());
     } else {
       m = el('img');
       m.loading = 'lazy';
@@ -39,9 +39,9 @@ export function fillPanel(panel, onPick) {
     const del = el('button', 'fav-del');
     del.type = 'button'; del.textContent = '★'; del.title = t('delFav');
     del.onclick = (e) => { e.stopPropagation(); toggle(item); };
-    t.append(m, del);
-    if (onPick) t.onclick = () => onPick(item);
-    else t.style.cursor = 'default';
-    panel.appendChild(t);
+    tile.append(m, del);
+    if (onPick) tile.onclick = () => onPick(item);
+    else tile.style.cursor = 'default';
+    panel.appendChild(tile);
   });
 }
