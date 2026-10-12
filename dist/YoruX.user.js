@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.4
+// @version      0.8.5
 // @description  YoruX: модульный мод для X/Twitter с плагинами
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -501,7 +501,7 @@
         h("button", { type: "button", onclick: () => window.open("https://github.com/SevaGetz/YoruX", "_blank") }, t("repo")),
         h("button", { type: "button", onclick: () => window.open("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js", "_blank") }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.4")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.5")
     );
   }
   function getPages() {
@@ -530,6 +530,8 @@
     box.dataset.theme = (r * 299 + g * 587 + b * 114) / 1e3 > 128 ? "light" : "dark";
     box.style.background = bg;
     box.style.color = cs.color;
+    box.style.setProperty("--yx-bg", bg);
+    box.style.setProperty("--yx-fg", cs.color);
     const back = iconBtn(t("back"), I.back, true, () => show(null));
     back.hidden = true;
     const title = h("h2", null, "YoruX");
@@ -540,7 +542,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.4"),
+        h("span", { class: "yx-ver" }, "v0.8.5"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -1489,7 +1491,9 @@
   .yx-opt > label:first-child{flex:1;font-size:15px}
   .yx-modal select,.yx-modal input[type=number],.yx-modal input[type=text]{background:transparent;color:inherit;
     border:1px solid var(--yx-ctl);border-radius:4px;height:36px;padding:0 8px;font:inherit}
-  .yx-modal select option{color:#000}
+  .yx-modal[data-theme=dark]{color-scheme:dark}
+  .yx-modal[data-theme=light]{color-scheme:light}
+  .yx-modal select option{background-color:var(--yx-bg);color:var(--yx-fg)}
   .yx-sw{position:relative;display:inline-block;width:38px;height:22px;flex:none;cursor:pointer}
   .yx-sw input{opacity:0;width:0;height:0;position:absolute}
   .yx-sw span{position:absolute;inset:0;border-radius:999px;background:var(--yx-ctl);transition:background .15s}
@@ -1504,7 +1508,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.4", location.href);
+  LOG("loaded v0.8.5", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   watchMenu();
