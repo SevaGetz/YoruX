@@ -1,7 +1,7 @@
 /**
  * @name Catppuccin Mocha
  * @author Catppuccin (port for YoruX)
- * @version 1.1.1
+ * @version 1.1.3
  * @description Мягкая пастельная тема Catppuccin Mocha для X
  */
 /*
@@ -177,3 +177,14 @@ a[aria-label^="Translated from"][aria-label$="by Google"] svg path { fill: var(-
 .text-gray-700 { color: var(--ctp-subtext1) !important; }
 .text-gray-500, .text-gray-600 { color: var(--ctp-overlay1) !important; }
 .border, .border-t, .border-b, .border-l, .border-r, .border-gray-100, .border-gray-200 { border-color: var(--ctp-surface0) !important; }
+
+/* затемнения сверху и снизу в ЛС: градиенты «from-background → transparent» берут чёрный цвет */
+:host { --color-background: var(--ctp-base) !important; }
+.from-background, .from-black, .from-gray-50 { --tw-gradient-from: var(--ctp-base) !important; }
+.via-background, .via-black { --tw-gradient-via: var(--ctp-base) !important; }
+.to-background, .to-black { --tw-gradient-to: var(--ctp-base) !important; }
+
+/* точные цели из дампа: X красит затемнения переменной --x-bg-primary и inline-градиентом */
+:root, :host, body { --x-bg-primary: var(--ctp-base) !important; }
+.bg-linear-to-b.from-transparent { --tw-gradient-via: var(--ctp-base) !important; --tw-gradient-to: var(--ctp-base) !important; }
+[style*="linear-gradient(360deg"] { background-image: linear-gradient(360deg, transparent 0%, var(--ctp-base) 100%) !important; }
