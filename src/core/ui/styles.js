@@ -29,6 +29,8 @@ export const CORE_CSS = `
   .yx-tile-title{font-weight:700;font-size:17px;line-height:20px}
   .yx-tile-desc{color:var(--yx-sub);font-size:13px;line-height:16px}
   .yx-tile-chev{flex:none;color:var(--yx-sub);display:flex}
+  .yx-modal input[type=text].yx-search{width:100%;box-sizing:border-box;background:transparent;color:inherit;border:1px solid var(--yx-line);
+    border-radius:999px;height:42px;padding:0 16px;font:inherit;margin:8px 0}
   .yx-search:focus,.yx-modal select:focus,.yx-modal input[type=number]:focus,.yx-modal input[type=text]:focus{outline:0;border-color:#1d9bf0}
   .yx-plugin{border-top:1px solid var(--yx-line);padding:14px 0}
   .yx-plugin:first-of-type{border-top:0}
@@ -52,6 +54,13 @@ export const CORE_CSS = `
   .yx-sw input:checked + span{background:#1d9bf0}
   .yx-sw input:checked + span::after{transform:translateX(16px)}
   .yx-hint{display:block;color:var(--yx-sub);font-size:13px;line-height:16px;margin-top:2px}
+  .yx-add{display:flex;gap:8px;align-items:center;margin:8px 0 4px}
+  .yx-modal .yx-add input[type=text].yx-search{flex:1;margin:0}
+  .yx-code{width:100%;box-sizing:border-box;min-height:160px;resize:vertical;background:transparent;color:inherit;
+    border:1px solid var(--yx-ctl);border-radius:8px;padding:10px;font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .yx-code:focus{outline:0;border-color:#1d9bf0}
+  .yx-sect{margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:700;font-size:17px;padding-bottom:8px}
+  .yx-err{color:#f4212e}
   .yx-empty{color:var(--yx-sub);text-align:center;padding:32px 0}
   .yx-menu-item{cursor:pointer}
   .yx-toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);z-index:2147483647;background:#1d9bf0;color:#fff;

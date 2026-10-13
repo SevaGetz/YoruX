@@ -11,7 +11,8 @@ const [maj, min] = pkg.version.split('.');
 const version = `${maj}.${min}.${process.env.GITHUB_RUN_NUMBER || 0}`;
 const raw = `https://raw.githubusercontent.com/${pkg.repo}/main/dist/YoruX.user.js`;
 
-const CONNECT = ['giphy.com', 'twimg.com'];
+// '*' нужен для тем по произвольным ссылкам
+const CONNECT = ['giphy.com', 'twimg.com', '*'];
 
 const header = `// ==UserScript==
 // @name         YoruX

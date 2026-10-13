@@ -92,8 +92,12 @@ export function registerPlugins(list) {
 }
 
 /* ---------- резервная копия настроек ---------- */
+const backups = []; // { key, get, set } — данные вне настроек плагинов (например, темы)
+export const registerBackup = (key, get, set) => backups.push({ key, get, set });
+
 export const exportConfig = () => ({
   yorux: 1,
+  extra: Object.fromEntries(backups.map((b) => [b.key, b.get()])),
   enabled: enabledMap(),
   options: Object.fromEntries(withSettings().map((p) => [p.name, { ...getOpts(p.name) }])),
 });
@@ -106,6 +110,7 @@ export function importConfig(obj) {
     optCache.set(p.name, o);
     write(optsKey(p.name), o);
   });
+  backups.forEach((b) => { if (obj.extra && b.key in obj.extra) b.set(obj.extra[b.key]); });
   syncPlugins();
 }
 

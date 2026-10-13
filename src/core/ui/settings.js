@@ -2,22 +2,9 @@ import { h, toast, xFont } from '../dom';
 import { plugins, isEnabled, setEnabled, exportConfig, importConfig, resetConfig } from '../api';
 import { t, tr, onLangChange } from '../i18n';
 import { settings as general } from '../general';
-
-/* ---------- иконки (контурные, как в меню X) ---------- */
-const ico = (inner, fill) => h('span', {
-  innerHTML: '<svg viewBox="0 0 24 24" width="' + (fill ? 20 : 26) + '" height="' + (fill ? 20 : 26) + '" fill="' + (fill ? 'currentColor' : 'none') +
-    '" stroke="' + (fill ? 'none' : 'currentColor') + '" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>',
-});
-const I = {
-  back: '<path d="M7.414 13l5.043 5.04-1.414 1.42L3.586 12l7.457-7.46 1.414 1.42L7.414 11H21v2H7.414z"/>',
-  close: '<path d="M10.59 12L4.54 5.96l1.42-1.42L12 10.59l6.04-6.05 1.42 1.42L13.41 12l6.05 6.04-1.42 1.42L12 13.41l-6.04 6.05-1.42-1.42L10.59 12z"/>',
-  plugins: '<path d="M10 4.5a2 2 0 1 1 4 0V6h3.5A1.5 1.5 0 0 1 19 7.5V11h-1.5a2 2 0 1 0 0 4H19v3.5a1.5 1.5 0 0 1-1.5 1.5H14v-1.5a2 2 0 1 0-4 0V20H6.5A1.5 1.5 0 0 1 5 18.5V15h1.5a2 2 0 1 0 0-4H5V7.5A1.5 1.5 0 0 1 6.5 6H10z"/>',
-  backup: '<path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/>',
-  star: '<path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85z"/>',
-  chev: '<path d="M9 5l7 7-7 7"/>',
-  tune: '<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
-};
-const iconBtn = (title, inner, fill, onclick) => h('button', { type: 'button', class: 'yx-icon', title, onclick }, ico(inner, fill));
+import { ico, I, iconBtn } from './icons';
+import { renderThemes } from './themes';
+import { getThemes } from '../themes';
 
 /* ---------- элементы управления ---------- */
 const sw = (checked, onChange) => {
@@ -135,6 +122,7 @@ function getPages() {
   const pages = [
     { id: 'general', icon: I.tune, title: t('general'), desc: t('generalDesc'), render: renderGeneral },
     { id: 'plugins', icon: I.plugins, title: t('plugins'), desc: t('pluginsDesc', { n: on, m: plugins.length }), render: renderPlugins },
+    { id: 'themes', icon: I.themes, title: t('themes'), desc: t('themesDesc', { n: getThemes().links.filter((l) => l.enabled).length }), render: renderThemes },
   ];
   plugins.filter((p) => p.started && p.tile).forEach((p) => pages.push({
     id: 'plugin:' + p.name,

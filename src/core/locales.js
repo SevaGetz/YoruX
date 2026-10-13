@@ -11,6 +11,11 @@ export default {
     lang: 'Язык', langAuto: 'Авто',
     menuItem: 'Пункт YoruX в меню «Ещё»', menuItemHint: 'Если выключить, настройки открываются из меню менеджера скриптов',
     debug: 'Отладочные сообщения в консоли',
+    themes: 'Темы', themesDesc: 'Онлайн-темы и свой CSS ({n} вкл.)',
+    themesHint: 'Ссылка на .css файл, как онлайн-темы в Vencord. Подойдёт raw-ссылка на GitHub.',
+    themeUrl: 'Ссылка на CSS темы…', add: 'Добавить', badUrl: 'Нужна ссылка http(s)', dup: 'Тема уже добавлена',
+    stLoading: 'Загрузка…', stOk: 'Загружено', stError: 'Ошибка загрузки', stCached: 'Не удалось обновить, используется кэш',
+    refresh: 'Обновить', remove: 'Удалить', customCss: 'Свой CSS', customPh: '/* твой CSS */', noThemes: 'Тем пока нет',
     version: 'Версия', repo: 'Репозиторий', update: 'Проверить обновление',
   },
   en: {
@@ -25,6 +30,11 @@ export default {
     lang: 'Language', langAuto: 'Auto',
     menuItem: 'YoruX item in the "More" menu', menuItemHint: 'If disabled, open settings from the userscript manager menu',
     debug: 'Debug messages in the console',
+    themes: 'Themes', themesDesc: 'Online themes and custom CSS ({n} on)',
+    themesHint: 'A link to a .css file, like online themes in Vencord. A raw GitHub link works.',
+    themeUrl: 'Link to a theme CSS file…', add: 'Add', badUrl: 'An http(s) link is required', dup: 'Theme already added',
+    stLoading: 'Loading…', stOk: 'Loaded', stError: 'Load failed', stCached: 'Update failed, using cache',
+    refresh: 'Refresh', remove: 'Remove', customCss: 'Custom CSS', customPh: '/* your CSS */', noThemes: 'No themes yet',
     version: 'Version', repo: 'Repository', update: 'Check for updates',
   },
 };

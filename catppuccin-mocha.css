@@ -1,0 +1,164 @@
+/**
+ * @name Catppuccin Mocha
+ * @author Catppuccin (port for YoruX)
+ * @version 1.0.0
+ * @description Мягкая пастельная тема Catppuccin Mocha для X
+ */
+/*
+ * Основано на Catppuccin userstyle для Twitter/X (MIT License, (c) Catppuccin)
+ * https://github.com/catppuccin/userstyles/tree/main/styles/twitter
+ * Классы вида .r-xxxx генерируются X и могут меняться — при поломке цветов обновляй селекторы.
+ * Акцент меняется одной переменной --ctp-accent ниже.
+ */
+
+:root {
+  --ctp-rosewater: #f5e0dc; --ctp-flamingo: #f2cdcd; --ctp-pink: #f5c2e7; --ctp-mauve: #cba6f7;
+  --ctp-red: #f38ba8; --ctp-maroon: #eba0ac; --ctp-peach: #fab387; --ctp-yellow: #f9e2af;
+  --ctp-green: #a6e3a1; --ctp-teal: #94e2d5; --ctp-sky: #89dceb; --ctp-sapphire: #74c7ec;
+  --ctp-blue: #89b4fa; --ctp-lavender: #b4befe;
+  --ctp-text: #cdd6f4; --ctp-subtext1: #bac2de; --ctp-subtext0: #a6adc8;
+  --ctp-overlay2: #9399b2; --ctp-overlay1: #7f849c; --ctp-overlay0: #6c7086;
+  --ctp-surface2: #585b70; --ctp-surface1: #45475a; --ctp-surface0: #313244;
+  --ctp-base: #1e1e2e; --ctp-mantle: #181825; --ctp-crust: #11111b;
+
+  /* акцент: поменяй на любой цвет из палитры выше */
+  --ctp-accent: var(--ctp-mauve);
+  --ctp-accent-hover: color-mix(in srgb, var(--ctp-accent) 90%, black);
+  --ctp-accent-active: color-mix(in srgb, var(--ctp-accent) 85%, black);
+}
+
+body.LightsOut {
+  --border-color: var(--ctp-surface0);
+  --color: var(--ctp-overlay1);
+  --color-emphasis: var(--ctp-text);
+  --hover-bg-color: var(--ctp-surface0);
+  --cpft-text-primary: var(--ctp-text);
+}
+
+/* тени диалогов и меню */
+body.LightsOut .r-qo02w8,
+body.LightsOut .r-15ce4ve { box-shadow: rgba(0,0,0,.4) 0 0 15px, rgba(0,0,0,.35) 0 0 3px 1px; }
+body.LightsOut .r-1tbvlxk { filter: drop-shadow(rgba(0,0,0,.5) 1px -1px 1px); }
+body.LightsOut .r-1uusn97 { box-shadow: rgba(0,0,0,.4) 0 0 5px, rgba(0,0,0,.35) 0 1px 4px 1px; }
+
+/* общий фон */
+body, .PageContainer, #placeholder { background-color: var(--ctp-base) !important; color: var(--ctp-text); }
+[data-testid="primaryColumn"], .r-kemksi { background-color: var(--ctp-base); }
+[style*="background-color: rgb(0, 0, 0)"], [style*="background-color: #000"] { background-color: var(--ctp-base) !important; }
+[style*="scrollbar-color: rgb(62, 65, 68) rgb(22, 24, 28)"] { scrollbar-color: var(--ctp-accent) transparent !important; scrollbar-width: thin; }
+
+/* верхняя панель */
+.r-5zmot { background-color: color-mix(in srgb, var(--ctp-base) 75%, transparent); }
+.r-cqee49 { color: var(--ctp-base); }
+
+/* hover / active */
+.r-1hdo0pc, .r-pjtv4k { background-color: color-mix(in srgb, var(--ctp-text) 10%, transparent); }
+.r-11gmi9o { background-color: color-mix(in srgb, var(--ctp-text) 20%, transparent); }
+.r-1cuuowz { background-color: color-mix(in srgb, var(--ctp-text) 3%, transparent); }
+
+/* текст */
+.r-1nao33i, .r-jwli3a { color: var(--ctp-text); }
+[style*="color: rgb(231, 233, 234)"]:not([style*="background-color: rgb(231, 233, 234)"]),
+[style*="color: rgb(239, 243, 244)"]:not([style*="background-color: rgb(239, 243, 244)"]),
+[style*="color: rgb(255, 255, 255)"]:not([style*="background-color: rgb(255, 255, 255)"]) { color: var(--ctp-text) !important; }
+[style*="color: rgb(113, 118, 123)"]:not([style*="background-color: rgb(113, 118, 123)"]),
+[style*="color: rgb(182, 185, 188)"]:not([style*="background-color: rgb(182, 185, 188)"]) { color: var(--ctp-overlay1) !important; }
+[style*="color: rgb(0, 186, 124)"]:not([style*="background-color: rgb(0, 186, 124)"]) { color: var(--ctp-green) !important; }
+[style*="color: rgb(249, 24, 128)"]:not([style*="background-color: rgb(249, 24, 128)"]),
+[style*="color: rgb(244, 33, 46)"]:not([style*="background-color: rgb(244, 33, 46)"]) { color: var(--ctp-red) !important; }
+[style*="color: rgb(250, 68, 152)"]:not([style*="background-color: rgb(250, 68, 152)"]) { color: var(--ctp-pink) !important; }
+[style*="color: rgb(255, 212, 0)"]:not([style*="background-color: rgb(255, 212, 0)"]) { color: var(--ctp-yellow) !important; }
+[style*="color: rgb(120, 86, 255)"]:not([style*="background-color: rgb(120, 86, 255)"]) { color: var(--ctp-mauve) !important; }
+[style*="color: rgb(255, 122, 0)"]:not([style*="background-color: rgb(255, 122, 0)"]) { color: var(--ctp-peach) !important; }
+[style*="color: rgb(29, 155, 240)"]:not([style*="background-color: rgb(29, 155, 240)"]) { color: var(--ctp-accent) !important; }
+.draftjs-styles_0 .public-DraftEditorPlaceholder-root { color: var(--ctp-overlay0); }
+
+/* рамки */
+.r-1kqtdi0, .r-1roi411 { border-color: var(--ctp-surface0); }
+.r-1igl3o0 { border-bottom-color: var(--ctp-surface0); }
+.r-2sztyj { border-top-color: var(--ctp-surface0); }
+.r-1aihyag { border-right-color: var(--ctp-surface0); }
+.r-1wyyjkm { border-left-color: var(--ctp-subtext0); }
+.r-1ccsd61, .r-xzxzvz { border-color: var(--ctp-surface2); }
+.r-1xc7w19 { border-color: var(--ctp-base); }
+.r-1pbtemp { border-right-color: var(--ctp-accent); }
+.r-vhj8yc { border-color: var(--ctp-accent); }
+.r-11mg6pl { border-color: var(--ctp-crust); }
+[style*="border-color: rgb(83, 100, 113)"] { border-color: var(--ctp-surface1) !important; }
+[style*="border-color: rgb(51, 54, 57)"] { border-color: var(--ctp-surface0) !important; }
+[style*="border-color: rgb(103, 7, 15)"] { border-color: color-mix(in srgb, var(--ctp-red) 50%, transparent) !important; }
+[style*="border-color: rgb(29, 155, 240)"] { border-color: var(--ctp-accent) !important; }
+[stroke="#2F3336" i] { stroke: var(--ctp-surface2) !important; }
+
+/* поиск, плашки, правая колонка */
+.r-gu4em3, .r-1bnu78o, .r-z32n2g, .r-1m3jxhj { background-color: var(--ctp-surface0); }
+.r-1bwzh9t { color: var(--ctp-overlay1); }
+.r-g2wdr4 { background-color: var(--ctp-mantle); }
+.r-14wv3jr { border-color: var(--ctp-mantle); }
+.r-1pr99xn { background-color: var(--ctp-surface1); }
+.r-1eltapf { background-color: color-mix(in srgb, var(--ctp-sapphire) 10%, transparent); }
+.r-rgqbpe { background-color: color-mix(in srgb, var(--ctp-blue) 10%, transparent); }
+.r-1fkb3t2 { background-color: var(--ctp-surface1); }
+.r-3gvs5h { background-color: var(--ctp-overlay1); }
+.r-qazpri { color: var(--ctp-overlay1); }
+.r-11z020y { background-color: color-mix(in srgb, var(--ctp-accent) 12%, transparent); }
+
+/* акцентные кнопки */
+.r-l5o3uw { background-color: var(--ctp-accent); }
+.r-1vtznih { background-color: var(--ctp-accent-hover); }
+.r-yuvema { background-color: var(--ctp-accent-active); }
+.r-eff69c { background-color: var(--ctp-accent-hover); }
+.r-1peqgm7 { background-color: color-mix(in srgb, var(--ctp-accent) 10%, transparent); }
+.r-r18ze4 { background-color: color-mix(in srgb, var(--ctp-accent) 20%, transparent); }
+.r-eok2q2 { background-color: color-mix(in srgb, var(--ctp-accent) 60%, transparent); }
+.r-9cip40 { box-shadow: var(--ctp-accent) 0 0 0 1px; }
+[style*="background-color: rgb(29, 155, 240)"] { background-color: var(--ctp-accent) !important; }
+[style*="background-color: rgb(142, 205, 248)"] { background-color: color-mix(in srgb, var(--ctp-accent) 80%, white) !important; }
+[style*="background-color: rgb(2, 17, 61)"] { background-color: color-mix(in srgb, var(--ctp-accent) 15%, transparent) !important; }
+[style*="background-color: rgb(239, 243, 244)"] { background-color: var(--ctp-text) !important; }
+[style*="background-color: rgb(244, 33, 46)"] { background-color: var(--ctp-red) !important; }
+[style*="background-color: rgb(147, 147, 147)"] { background-color: var(--ctp-overlay0) !important; }
+[style*="background-color: rgb(147, 147, 147)"] + [style*="background-color: rgb(250, 250, 250)"] { background-color: var(--ctp-text) !important; }
+[style*="background-color: rgba(255, 255, 255, 0.25)"] { background-color: color-mix(in srgb, var(--ctp-text) 25%, transparent) !important; }
+[style*="background-color: rgba(15, 20, 25, 0.75)"] { background-color: color-mix(in srgb, var(--ctp-crust) 75%, transparent) !important; }
+.r-jc7xae { background-color: color-mix(in srgb, var(--ctp-text) 96%, black); }
+.r-6wtuen { background-color: color-mix(in srgb, var(--ctp-text) 92%, black); }
+[style="background-image: linear-gradient(61.63deg, rgb(45, 66, 255) -15.05%, rgb(156, 99, 250) 104.96%);"] {
+  background-image: linear-gradient(61.63deg, var(--ctp-blue) -15.05%, var(--ctp-mauve) 104.96%) !important;
+}
+[style*="background-premiumplus-web"] { background-image: none !important; background-color: var(--ctp-surface0); }
+
+/* тёмный текст на акцентных фонах */
+.r-l5o3uw .r-jwli3a, .r-1vtznih .r-jwli3a, .r-yuvema .r-jwli3a,
+[style*="background-color: rgb(29, 155, 240)"] [style*="color: rgb(255, 255, 255)"],
+[style*="background-color: rgb(239, 243, 244)"] [style*="color: rgb(15, 20, 25)"],
+[style*="background-color: rgb(244, 33, 46)"] [style*="color: rgb(255, 255, 255)"],
+.r-eff69c [style*="color: rgb(255, 255, 255)"],
+[data-testid$="-follow"] [style*="color: rgb(15, 20, 25)"] { color: var(--ctp-crust) !important; }
+
+/* лайки, ретвиты, прочее */
+[fill="rgb(249,22,127)"], [fill="rgb(222,45,108)"], [style="color: rgb(249, 24, 128);"] [viewBox="0 0 24 24"] path { fill: var(--ctp-red) !important; }
+.r-1krxqcr { background-color: color-mix(in srgb, var(--ctp-red) 10%, transparent); }
+.r-uuique { background-color: color-mix(in srgb, var(--ctp-red) 20%, transparent); }
+.r-vkub15, .r-9l7dzd { color: var(--ctp-red); }
+.r-1cvl2hr { color: var(--ctp-accent); }
+.r-o6sn0f { color: var(--ctp-green); }
+.r-15azkrj { background-color: color-mix(in srgb, var(--ctp-green) 10%, transparent); }
+.r-1x669os { background-color: color-mix(in srgb, var(--ctp-green) 20%, transparent); }
+.r-s224ru { background-color: var(--ctp-green); }
+.r-h7o7i8 { background-color: color-mix(in srgb, var(--ctp-green) 10%, transparent); }
+.r-4nw3r4, .r-1dgebii { background-color: var(--ctp-red); }
+.r-b5kvu3 { border-color: var(--ctp-red); }
+.r-qqmkd0, .r-1kwlb9n { background-color: color-mix(in srgb, var(--ctp-red) 10%, transparent); }
+.r-12d83nn { background-color: color-mix(in srgb, var(--ctp-red) 90%, black); }
+.r-oybae9 { background-color: color-mix(in srgb, var(--ctp-red) 85%, black); }
+.r-1blqq69 { border-color: var(--ctp-mauve); }
+[stroke="#1D9BF0" i], [style*="stroke: rgb(29, 155, 240)"] { stroke: var(--ctp-accent) !important; }
+[stroke="#FFD400" i] { stroke: var(--ctp-yellow) !important; }
+[fill="#829AAB" i] { fill: var(--ctp-overlay2) !important; }
+[fill="#78C6EE" i] { fill: var(--ctp-sky) !important; }
+[fill="#1DA1F2" i] { fill: color-mix(in srgb, var(--ctp-sky) 70%, black) !important; }
+[fill="#d18800" i] { fill: var(--ctp-yellow) !important; }
+[stop-color="#f4e72a" i], [stop-color="#cd8105" i], [stop-color="#cb7b00" i],
+[stop-color="#f4ec26" i], [stop-color="#f9e87f" i], [stop-color="#e2b719" i] { stop-color: var(--ctp-yellow) !important; }
+a[aria-label^="Translated from"][aria-label$="by Google"] svg path { fill: var(--ctp-text) !important; }

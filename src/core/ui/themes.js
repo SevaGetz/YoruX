@@ -1,0 +1,61 @@
+import { h, toast } from '../dom';
+import { t } from '../i18n';
+import { iconBtn, I } from './icons';
+import { addTheme, getMeta, getStatus, getThemes, onThemesChange, refreshTheme, removeTheme, setCustom, setThemeEnabled } from '../themes';
+
+const sw = (checked, onChange) => {
+  const i = h('input', { type: 'checkbox', checked: !!checked });
+  i.addEventListener('change', () => onChange(i.checked));
+  return h('label', { class: 'yx-sw' }, i, h('span'));
+};
+
+const fallbackName = (u) => { try { return decodeURIComponent(new URL(u).pathname.split('/').pop()) || u; } catch (e) { return u; } };
+const STATUS = { loading: 'stLoading', ok: 'stOk', error: 'stError', cached: 'stCached' };
+
+export function renderThemes(box) {
+  const input = h('input', { class: 'yx-search', type: 'text', placeholder: t('themeUrl') });
+  const add = () => {
+    const err = addTheme(input.value);
+    if (err) { toast(t(err)); return; }
+    input.value = '';
+  };
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') add(); });
+
+  const list = h('div');
+  const draw = () => {
+    list.textContent = '';
+    const links = getThemes().links;
+    if (!links.length) list.append(h('div', { class: 'yx-empty' }, t('noThemes')));
+    links.forEach((l) => {
+      const meta = getMeta(l.url);
+      const st = getStatus(l.url);
+      const sub = [st ? t(STATUS[st]) : '', meta.author, meta.version && 'v' + meta.version].filter(Boolean).join(' · ');
+      list.append(h('div', { class: 'yx-plugin' },
+        h('div', { class: 'yx-prow' },
+          h('div', { class: 'yx-pinfo' },
+            h('div', { class: 'yx-pname' }, meta.name || fallbackName(l.url)),
+            meta.description ? h('div', { class: 'yx-pdesc' }, meta.description) : null,
+            h('div', { class: 'yx-pdesc' + (st === 'error' ? ' yx-err' : ''), style: { wordBreak: 'break-all' } }, l.url + (sub ? ' — ' + sub : ''))),
+          iconBtn(t('refresh'), I.refresh, false, () => refreshTheme(l.url)),
+          iconBtn(t('remove'), I.trash, false, () => removeTheme(l.url)),
+          sw(l.enabled, (v) => setThemeEnabled(l.url, v)))));
+    });
+  };
+  const off = onThemesChange(draw);
+  draw();
+
+  // свой CSS (как QuickCSS в Vencord)
+  const s = getThemes();
+  const area = h('textarea', { class: 'yx-code', spellcheck: false, placeholder: t('customPh') });
+  area.value = s.custom;
+  let timer = 0;
+  area.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => setCustom(area.value, null), 400); });
+
+  box.append(
+    h('div', { class: 'yx-hint' }, t('themesHint')),
+    h('div', { class: 'yx-add' }, input, h('button', { type: 'button', class: 'yx-primary', onclick: add }, t('add'))),
+    list,
+    h('div', { class: 'yx-sect' }, t('customCss'), sw(s.customOn, (v) => setCustom(null, v))),
+    area);
+  return () => { off(); clearTimeout(timer); };
+}
