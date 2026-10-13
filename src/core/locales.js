@@ -19,7 +19,9 @@ export default {
     upToDate: 'Установлена последняя версия (v{v})', updateErr: 'Не удалось проверить обновление',
     reloadTitle: 'Обновление до v{v}', reloadText: 'Новая версия YoruX установлена. Перезагрузите вкладку, чтобы применить изменения.',
     reloadPending: 'Установите v{v} во вкладке, которая открылась, затем перезагрузите эту вкладку, чтобы применить изменения.',
-    reloadBtn: 'Перезагрузить', later: 'Позже',
+    reloadBtn: 'Перезагрузить', later: 'Позже', install: 'Установить',
+    availTitle: 'Доступна v{v}', reloadAvail: 'Вышла новая версия YoruX. Нажмите «Установить», затем перезагрузите вкладку.',
+    autoUpdate: 'Проверять обновления при открытии X', autoUpdateHint: 'Не чаще раза в 2 часа',
   },
   en: {
     back: 'Back', close: 'Close',
@@ -41,6 +43,8 @@ export default {
     upToDate: 'You have the latest version (v{v})', updateErr: 'Could not check for updates',
     reloadTitle: 'Update to v{v}', reloadText: 'A new YoruX version is installed. Reload the tab to apply the changes.',
     reloadPending: 'Install v{v} in the tab that just opened, then reload this tab to apply the changes.',
-    reloadBtn: 'Reload', later: 'Later',
+    reloadBtn: 'Reload', later: 'Later', install: 'Install',
+    availTitle: 'v{v} is available', reloadAvail: 'A new YoruX version is out. Click "Install", then reload the tab.',
+    autoUpdate: 'Check for updates when X opens', autoUpdateHint: 'At most once every 2 hours',
   },
 };

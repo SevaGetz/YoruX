@@ -1,7 +1,8 @@
 import { h, xFont } from '../dom';
 import { t } from '../i18n';
+import { openInstaller } from '../install';
 
-export function showReloadPrompt(version, pending) {
+export function showReloadPrompt(version, mode = 'installed') {
   const old = document.querySelector('.yx-pop');
   if (old) old.remove();
 
@@ -16,11 +17,16 @@ export function showReloadPrompt(version, pending) {
   box.style.setProperty('--yx-bg', bg);
   box.style.setProperty('--yx-fg', cs.color);
 
+  const avail = mode === 'available';
+  const text = { installed: 'reloadText', pending: 'reloadPending', available: 'reloadAvail' }[mode] || 'reloadText';
+  const main = avail
+    ? h('button', { type: 'button', class: 'yx-primary', onclick: () => { openInstaller(); showReloadPrompt(version, 'pending'); } }, t('install'))
+    : h('button', { type: 'button', class: 'yx-primary', onclick: () => location.reload() }, t('reloadBtn'));
   box.append(h('div', { class: 'yx-dlg' },
-    h('h2', null, t('reloadTitle', { v: version })),
-    h('p', null, t(pending ? 'reloadPending' : 'reloadText', { v: version })),
+    h('h2', null, t(avail ? 'availTitle' : 'reloadTitle', { v: version })),
+    h('p', null, t(text, { v: version })),
     h('div', { class: 'yx-btns' },
       h('button', { type: 'button', onclick: () => box.remove() }, t('later')),
-      h('button', { type: 'button', class: 'yx-primary', onclick: () => location.reload() }, t('reloadBtn')))));
+      main)));
   document.body.appendChild(box);
 }

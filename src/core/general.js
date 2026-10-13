@@ -8,6 +8,7 @@ export const settings = definePluginSettings({
     choices: [{ value: 'auto', label: () => t('langAuto') }, { value: 'ru', label: 'Русский' }, { value: 'en', label: 'English' }],
   },
   menuItem: { type: 'boolean', title: () => t('menuItem'), hint: () => t('menuItemHint'), default: true, onChange: notify },
+  autoUpdate: { type: 'boolean', title: () => t('autoUpdate'), hint: () => t('autoUpdateHint'), default: true },
   debug: { type: 'boolean', title: () => t('debug'), default: false, onChange: setDebug },
 });
 

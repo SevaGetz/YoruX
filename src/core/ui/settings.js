@@ -7,6 +7,8 @@ import { renderThemes } from './themes';
 import { getThemes } from '../themes';
 import { isNewer } from '../version';
 import { showReloadPrompt } from './reload';
+import { fetchLatest } from '../updater';
+import { openInstaller } from '../install';
 
 const sw = (checked, onChange) => {
   const i = h('input', { type: 'checkbox', checked: !!checked });
@@ -108,16 +110,9 @@ function renderBackup(box) {
 const openUrl = (url) => (typeof GM_openInTab === 'function' ? GM_openInTab(url, { active: true }) : window.open(url, '_blank'));
 
 function checkUpdate() {
-  GM_xmlhttpRequest({
-    method: 'GET', url: __RAW__ + '?t=' + Date.now(), responseType: 'text', timeout: 15000,
-    onload: (r) => {
-      const m = r.status >= 200 && r.status < 300 && /@version\s+(\S+)/.exec(r.responseText || '');
-      if (!m) { toast(t('updateErr')); return; }
-      if (isNewer(m[1], __VERSION__)) { openUrl(__RAW__); showReloadPrompt(m[1], true); } else toast(t('upToDate', { v: __VERSION__ }));
-    },
-    onerror: () => toast(t('updateErr')),
-    ontimeout: () => toast(t('updateErr')),
-  });
+  fetchLatest().then((v) => {
+    if (isNewer(v, __VERSION__)) { openInstaller(); showReloadPrompt(v, 'pending'); } else toast(t('upToDate', { v: __VERSION__ }));
+  }).catch(() => toast(t('updateErr')));
 }
 
 function renderGeneral(box) {
