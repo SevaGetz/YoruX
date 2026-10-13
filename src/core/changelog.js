@@ -6,9 +6,6 @@ import { lang, t } from './i18n';
 import { showPop } from './ui/pop';
 
 const KEY = 'yorux:changelogSeen';
-const BASE = '0.8';
-
-const hadData = read('yorux:migrated:gifFav', null) !== null;
 
 const keyOf = (v) => String(v).split('.').slice(0, 2).join('.');
 const current = keyOf(__VERSION__);
@@ -21,11 +18,8 @@ export const renderEntries = (list) => h('div', { class: 'yx-news' }, list.flatM
 ]));
 
 export function initChangelog(openSettings) {
-  let seen = read(KEY, null);
-  if (seen === null) {
-    if (!hadData) { write(KEY, current); return; }
-    seen = BASE;
-  }
+  const seen = read(KEY, null);
+  if (seen === null) { write(KEY, current); return; }
   const fresh = releases().filter((e) => isNewer(e.v, seen)).slice(0, 3);
   if (isNewer(current, seen)) write(KEY, current);
   if (!fresh.length) return;

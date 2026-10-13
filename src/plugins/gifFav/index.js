@@ -1,5 +1,4 @@
 import { definePlugin } from '@core/api';
-import { read, write } from '@core/storage';
 import { h, toast } from '@core/dom';
 import { downloadText, pickJson } from '@core/ui/settings';
 import { settings } from './settings';
@@ -8,13 +7,6 @@ import { CSS } from './styles';
 import { fillPanel } from './panel';
 import { importItems, load, save, subscribe } from './store';
 import { scanPicker, startPicker, stopPicker } from './picker';
-
-function migrate() {
-  if (read('yorux:migrated:gifFav', false)) return;
-  const old = read('gifFavSettings', null);
-  if (old) ['convert', 'maxW', 'closeAfter'].forEach((k) => { if (k in old) settings.store[k] = old[k]; });
-  write('yorux:migrated:gifFav', true);
-}
 
 function renderManager(box) {
   const grid = h('div', { class: 'fav-panel' });
@@ -55,7 +47,7 @@ export default definePlugin({
     desc: () => t('count', { n: load().length }),
     render: renderManager,
   },
-  start() { migrate(); startPicker(); },
+  start() { startPicker(); },
   stop() { stopPicker(); },
   scan: scanPicker,
 });
