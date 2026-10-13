@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.11
+// @version      0.8.12
 // @description  YoruX: modular mod for X/Twitter
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -12,6 +12,7 @@
 // @grant        GM_xmlhttpRequest
 // @grant        GM_registerMenuCommand
 // @grant        GM_openInTab
+// @grant        GM_setClipboard
 // @connect      giphy.com
 // @connect      twimg.com
 // @connect      raw.githubusercontent.com
@@ -61,9 +62,9 @@
     return ff && !/^\s*(Times|serif)/i.test(ff) ? ff : 'TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
   }
   function toast(msg) {
-    const t4 = h("div", { class: "yx-toast", style: { fontFamily: xFont() } }, msg);
-    document.body.appendChild(t4);
-    setTimeout(() => t4.remove(), 3500);
+    const t5 = h("div", { class: "yx-toast", style: { fontFamily: xFont() } }, msg);
+    document.body.appendChild(t5);
+    setTimeout(() => t5.remove(), 3500);
   }
   var styles = /* @__PURE__ */ new Map();
   var styleEls = /* @__PURE__ */ new WeakMap();
@@ -159,7 +160,6 @@
       debug: "Отладочные сообщения в консоли",
       themes: "Темы",
       themesDesc: "Онлайн-темы и свой CSS ({n} вкл.)",
-      themesHint: "Ссылка на .css файл. Подойдёт raw-ссылка на GitHub.",
       themeUrl: "Ссылка на CSS темы…",
       add: "Добавить",
       badUrl: "Нужна ссылка http(s)",
@@ -207,7 +207,6 @@
       debug: "Debug messages in the console",
       themes: "Themes",
       themesDesc: "Online themes and custom CSS ({n} on)",
-      themesHint: "A link to a .css file. A raw GitHub link works.",
       themeUrl: "Link to a theme CSS file…",
       add: "Add",
       badUrl: "An http(s) link is required",
@@ -305,9 +304,9 @@
     return { def, store, owner };
   }
   var extras = [];
-  var registerCoreSettings = (name, settings4) => {
-    settings4.owner.name = name;
-    extras.push({ name, settings: settings4 });
+  var registerCoreSettings = (name, settings5) => {
+    settings5.owner.name = name;
+    extras.push({ name, settings: settings5 });
   };
   var withSettings = () => [...extras, ...plugins].filter((p) => p.settings);
   function definePlugin(p) {
@@ -384,8 +383,112 @@
     syncPlugins();
   }
 
-  // src/core/general.js
+  // src/plugins/embedLink/i18n.js
+  var t2 = createT({
+    ru: {
+      title: "Ссылки с эмбедом",
+      desc: "Кнопка «Поделиться → Копировать ссылку» копирует ссылку через эмбед-фиксер (fixupx.com и др.), чтобы в Discord/Telegram сразу был превью",
+      optService: "Сервис эмбедов",
+      optCustom: "Свой домен",
+      optCustomHint: "Работает, если выше выбран «Свой домен». Например: fx.example.com",
+      optToast: "Показывать уведомление при замене ссылки",
+      custom: "Свой домен…",
+      done: "Ссылка скопирована: {host}"
+    },
+    en: {
+      title: "Embed links",
+      desc: "Share → Copy link copies the link through an embed fixer (fixupx.com etc.) so Discord/Telegram shows a preview right away",
+      optService: "Embed service",
+      optCustom: "Custom domain",
+      optCustomHint: 'Used when "Custom domain…" is selected above. Example: fx.example.com',
+      optToast: "Show a notification when the link is replaced",
+      custom: "Custom domain…",
+      done: "Link copied: {host}"
+    }
+  });
+
+  // src/plugins/embedLink/settings.js
+  var SERVICES = ["fixupx.com", "fxtwitter.com", "vxtwitter.com", "fixvx.com"];
   var settings = definePluginSettings({
+    service: {
+      type: "select",
+      title: () => t2("optService"),
+      default: "fixupx.com",
+      choices: [...SERVICES.map((h2) => ({ value: h2, label: h2 })), { value: "custom", label: () => t2("custom") }]
+    },
+    custom: { type: "text", title: () => t2("optCustom"), hint: () => t2("optCustomHint"), default: "" },
+    toast: { type: "boolean", title: () => t2("optToast"), default: false }
+  });
+
+  // src/plugins/embedLink/helpers.js
+  var COPY_ICON = "M18.36 5.64c-1.95-1.96-5.11-1.96-7.07 0";
+  var COPY_TEXT = /^(copy link|копировать ссылку)/i;
+  var cleanHost = (s) => String(s || "").trim().replace(/^[a-z]+:\/\//i, "").split(/[/?#\s]/)[0].toLowerCase();
+  function isCopyItem(item) {
+    const p = item.querySelector("svg path");
+    if (p && (p.getAttribute("d") || "").startsWith(COPY_ICON)) return true;
+    return COPY_TEXT.test((item.textContent || "").trim());
+  }
+  function tweetPath(pathname) {
+    const m = /^\/([^/]+)\/status\/(\d+)/.exec(pathname || "");
+    return m ? { user: m[1], id: m[2] } : null;
+  }
+  function refFromArticle(article2, origin) {
+    if (!article2) return null;
+    const a = [...article2.querySelectorAll('a[href*="/status/"]')].find((x) => x.querySelector("time"));
+    return a ? tweetPath(new URL(a.getAttribute("href"), origin).pathname) : null;
+  }
+  var buildUrl = (host, ref) => `https://${host}/${ref.user}/status/${ref.id}`;
+
+  // src/plugins/embedLink/index.js
+  var article = null;
+  var timer = 0;
+  var hostNow = () => {
+    const s = settings.store;
+    return s.service === "custom" ? cleanHost(s.custom) : s.service;
+  };
+  function copy(text) {
+    if (typeof GM_setClipboard === "function") GM_setClipboard(text, "text");
+    else if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {
+    });
+  }
+  function onClick(e) {
+    const target = e.target;
+    if (!target || !target.closest) return;
+    const item = target.closest('[role="menuitem"]');
+    if (item) {
+      if (!isCopyItem(item)) return;
+      const ref = refFromArticle(article && article.isConnected ? article : null, location.origin) || tweetPath(location.pathname);
+      const host = hostNow();
+      if (!ref || !host) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        copy(buildUrl(host, ref));
+        if (settings.store.toast) toast(t2("done", { host }));
+      }, 150);
+      return;
+    }
+    if (target.closest('[role="menu"]')) return;
+    article = target.closest("article");
+  }
+  var embedLink_default = definePlugin({
+    name: "embedLink",
+    title: () => t2("title"),
+    description: () => t2("desc"),
+    enabledByDefault: false,
+    settings,
+    start() {
+      document.addEventListener("click", onClick, true);
+    },
+    stop() {
+      document.removeEventListener("click", onClick, true);
+      clearTimeout(timer);
+      article = null;
+    }
+  });
+
+  // src/core/general.js
+  var settings2 = definePluginSettings({
     lang: {
       type: "select",
       title: () => t("lang"),
@@ -396,9 +499,9 @@
     menuItem: { type: "boolean", title: () => t("menuItem"), hint: () => t("menuItemHint"), default: true, onChange: notify },
     debug: { type: "boolean", title: () => t("debug"), default: false, onChange: setDebug }
   });
-  registerCoreSettings("core", settings);
-  setLangSource(() => settings.store.lang);
-  var apply = () => setDebug(settings.store.debug);
+  registerCoreSettings("core", settings2);
+  setLangSource(() => settings2.store.lang);
+  var apply = () => setDebug(settings2.store.debug);
   apply();
   onPluginsChange(apply);
 
@@ -652,13 +755,12 @@
     const s = getThemes();
     const area = h("textarea", { class: "yx-code", spellcheck: false, placeholder: t("customPh") });
     area.value = s.custom;
-    let timer2 = 0;
+    let timer3 = 0;
     area.addEventListener("input", () => {
-      clearTimeout(timer2);
-      timer2 = setTimeout(() => setCustom(area.value, null), 400);
+      clearTimeout(timer3);
+      timer3 = setTimeout(() => setCustom(area.value, null), 400);
     });
     box.append(
-      h("div", { class: "yx-hint" }, t("themesHint")),
       h("div", { class: "yx-add" }, input, h("button", { type: "button", class: "yx-primary", onclick: add }, t("add"))),
       list,
       h("div", { class: "yx-sect" }, t("customCss"), sw(s.customOn, (v) => setCustom(null, v))),
@@ -666,7 +768,7 @@
     );
     return () => {
       off();
-      clearTimeout(timer2);
+      clearTimeout(timer3);
     };
   }
 
@@ -704,11 +806,11 @@
     });
     return i;
   }
-  var optionRows = (settings4) => Object.entries(settings4.def).map(([key, def]) => h(
+  var optionRows = (settings5) => Object.entries(settings5.def).map(([key, def]) => h(
     "div",
     { class: "yx-opt" },
     h("label", null, tr(def.title) || key, def.hint ? h("span", { class: "yx-hint" }, tr(def.hint)) : null),
-    control(settings4.store, key, def)
+    control(settings5.store, key, def)
   ));
   function renderPlugins(box) {
     const search = h("input", { class: "yx-search", type: "text", placeholder: t("search") });
@@ -820,10 +922,10 @@
           toast(t("updateErr"));
           return;
         }
-        if (isNewer(m[1], "0.8.11")) {
+        if (isNewer(m[1], "0.8.12")) {
           toast(t("updateAvail", { v: m[1] }));
           openUrl("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js");
-        } else toast(t("upToDate", { v: "0.8.11" }));
+        } else toast(t("upToDate", { v: "0.8.12" }));
       },
       onerror: () => toast(t("updateErr")),
       ontimeout: () => toast(t("updateErr"))
@@ -831,14 +933,14 @@
   }
   function renderGeneral(box) {
     box.append(
-      h("div", { class: "yx-opts" }, optionRows(settings)),
+      h("div", { class: "yx-opts" }, optionRows(settings2)),
       h(
         "div",
         { class: "yx-btns" },
         h("button", { type: "button", onclick: () => openUrl("https://github.com/SevaGetz/YoruX") }, t("repo")),
         h("button", { type: "button", onclick: checkUpdate }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.11")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.12")
     );
   }
   function getPages() {
@@ -881,7 +983,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.11"),
+        h("span", { class: "yx-ver" }, "v0.8.12"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -944,7 +1046,7 @@
   }
 
   // src/plugins/gifFav/i18n.js
-  var t2 = createT({
+  var t3 = createT({
     ru: {
       title: "Избранные GIF",
       desc: "Вкладка «Избранное» в пикере GIF, звёздочки на GIF в пикере и в твитах, конвертация mp4 → GIF при отправке",
@@ -1000,15 +1102,15 @@
   });
 
   // src/plugins/gifFav/settings.js
-  var settings2 = definePluginSettings({
-    convert: { type: "boolean", title: () => t2("optConvert"), default: true },
-    maxW: { type: "select", title: () => t2("optMaxW"), default: 400, choices: [
+  var settings3 = definePluginSettings({
+    convert: { type: "boolean", title: () => t3("optConvert"), default: true },
+    maxW: { type: "select", title: () => t3("optMaxW"), default: 400, choices: [
       { value: 220, label: "220 px" },
       { value: 300, label: "300 px" },
       { value: 400, label: "400 px" },
       { value: 480, label: "480 px" }
     ] },
-    closeAfter: { type: "boolean", title: () => t2("optClose"), default: true }
+    closeAfter: { type: "boolean", title: () => t3("optClose"), default: true }
   });
 
   // src/plugins/gifFav/styles.js
@@ -1063,7 +1165,7 @@
     save2(a);
   }
   function importItems(arr) {
-    if (!Array.isArray(arr)) throw new Error(t2("notArray"));
+    if (!Array.isArray(arr)) throw new Error(t3("notArray"));
     const cur = load2();
     let added = 0;
     arr.forEach((it) => {
@@ -1082,7 +1184,7 @@
     const favs = load2();
     if (!favs.length) {
       const e = el("div", "fav-empty");
-      e.textContent = t2("empty");
+      e.textContent = t3("empty");
       panel.appendChild(e);
       return;
     }
@@ -1125,7 +1227,7 @@
       const del = el("button", "fav-del");
       del.type = "button";
       del.textContent = "★";
-      del.title = t2("delFav");
+      del.title = t3("delFav");
       del.onclick = (e) => {
         e.stopPropagation();
         toggle(item);
@@ -1331,12 +1433,12 @@
           const n = Math.max(1, Math.min(120, Math.floor(dur / step)));
           const frames = [];
           for (let i = 0; i < n; i++) {
-            const t4 = Math.min(i * step, Math.max(0, dur - 0.05));
-            if (Math.abs(v.currentTime - t4) > 1e-3) {
+            const t5 = Math.min(i * step, Math.max(0, dur - 0.05));
+            if (Math.abs(v.currentTime - t5) > 1e-3) {
               await new Promise((res) => {
                 v.onseeked = res;
                 setTimeout(res, 3e3);
-                v.currentTime = t4;
+                v.currentTime = t5;
               });
             }
             ctx.drawImage(v, 0, 0, w, h2);
@@ -1414,7 +1516,7 @@
     else document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", keyCode: 27, bubbles: true }));
   }
   function pick(item, d) {
-    toast(t2("loading"));
+    toast(t3("loading"));
     GM_xmlhttpRequest({
       method: "GET",
       url: item.url,
@@ -1422,22 +1524,22 @@
       onload: (r) => {
         const blob = r.response;
         if (!blob || !blob.size) {
-          toast(t2("dlFail"));
+          toast(t3("dlFail"));
           return;
         }
         const finish = (file) => {
           if (!attachFile(file, d)) {
-            toast(t2("noTarget"));
+            toast(t3("noTarget"));
             return;
           }
-          if (settings2.store.closeAfter) setTimeout(() => closeDialog(d), 300);
+          if (settings3.store.closeAfter) setTimeout(() => closeDialog(d), 300);
         };
         const type = blob.type || (item.type === "video" ? "video/mp4" : "image/gif");
-        if (/^video\//.test(type) && settings2.store.convert) {
-          toast(t2("converting"));
-          mp4ToGif(blob, settings2.store.maxW).then((bytes) => finish(new File([bytes], "favorite.gif", { type: "image/gif" }))).catch((e) => {
+        if (/^video\//.test(type) && settings3.store.convert) {
+          toast(t3("converting"));
+          mp4ToGif(blob, settings3.store.maxW).then((bytes) => finish(new File([bytes], "favorite.gif", { type: "image/gif" }))).catch((e) => {
             LOG("конвертация в GIF не удалась, отправляю как видео:", e);
-            toast(t2("convFail"));
+            toast(t3("convFail"));
             finish(new File([blob], "favorite.mp4", { type }));
           });
           return;
@@ -1445,7 +1547,7 @@
         const ext = { "video/mp4": "mp4", "image/gif": "gif", "image/webp": "webp", "image/png": "png", "image/jpeg": "jpg" }[type] || "gif";
         finish(new File([blob], "favorite." + ext, { type }));
       },
-      onerror: () => toast(t2("netErr"))
+      onerror: () => toast(t3("netErr"))
     });
   }
 
@@ -1476,7 +1578,7 @@
       host.classList.add("fav-host");
       b = el("span", "fav-star");
       b.textContent = "★";
-      b.title = t2("addFav");
+      b.title = t3("addFav");
       host.appendChild(b);
     }
     nodeOf.set(b, node);
@@ -1554,10 +1656,10 @@
     const bar = el("div", "fav-bar");
     const bAll = el("button");
     bAll.type = "button";
-    bAll.textContent = t2("all");
+    bAll.textContent = t3("all");
     const bFav = el("button");
     bFav.type = "button";
-    bFav.textContent = t2("favTab");
+    bFav.textContent = t3("favTab");
     bar.append(bAll, bFav);
     const panel = el("div", "fav-panel");
     panel.hidden = true;
@@ -1645,7 +1747,7 @@
     if (read("yorux:migrated:gifFav", false)) return;
     const old = read("gifFavSettings", null);
     if (old) ["convert", "maxW", "closeAfter"].forEach((k) => {
-      if (k in old) settings2.store[k] = old[k];
+      if (k in old) settings3.store[k] = old[k];
     });
     write("yorux:migrated:gifFav", true);
   }
@@ -1653,7 +1755,7 @@
     const grid = h("div", { class: "fav-panel" });
     const count = h("span");
     const refresh = () => {
-      count.textContent = t2("total", { n: load2().length });
+      count.textContent = t3("total", { n: load2().length });
       fillPanel(grid, null);
     };
     refresh();
@@ -1667,35 +1769,35 @@
         h("button", {
           type: "button",
           onclick: () => downloadText("yorux-gifs-" + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + ".json", JSON.stringify(load2(), null, 2))
-        }, t2("export")),
+        }, t3("export")),
         h("button", {
           type: "button",
           onclick: () => pickJson((arr) => {
-            toast(t2("imported", { n: importItems(arr) }));
+            toast(t3("imported", { n: importItems(arr) }));
           })
-        }, t2("import")),
+        }, t3("import")),
         h("button", {
           type: "button",
           class: "yx-danger",
           onclick: () => {
-            if (load2().length && confirm(t2("confirmClear"))) save2([]);
+            if (load2().length && confirm(t3("confirmClear"))) save2([]);
           }
-        }, t2("clear"))
+        }, t3("clear"))
       )
     );
     return unsub2;
   }
   var gifFav_default = definePlugin({
     name: "gifFav",
-    title: () => t2("title"),
-    description: () => t2("desc"),
+    title: () => t3("title"),
+    description: () => t3("desc"),
     enabledByDefault: false,
-    settings: settings2,
+    settings: settings3,
     styles: CSS,
     tile: {
       icon: '<path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85z"/>',
-      title: () => t2("title"),
-      desc: () => t2("count", { n: load2().length }),
+      title: () => t3("title"),
+      desc: () => t3("count", { n: load2().length }),
       render: renderManager
     },
     start() {
@@ -1735,7 +1837,7 @@
   var keyOf = (id) => "hide_" + id;
 
   // src/plugins/sidebarHide/i18n.js
-  var t3 = createT({
+  var t4 = createT({
     ru: {
       title: "Скрыть пункты меню",
       desc: "Отключает выбранные пункты в боковом меню X (Обзор, Grok, Premium и т.д.)",
@@ -1793,10 +1895,10 @@
   // src/plugins/sidebarHide/settings.js
   var hooks = { apply: () => {
   } };
-  var settings3 = definePluginSettings(Object.fromEntries(ITEMS.map((it) => [keyOf(it.id), {
+  var settings4 = definePluginSettings(Object.fromEntries(ITEMS.map((it) => [keyOf(it.id), {
     type: "boolean",
-    title: () => t3("hide", { name: t3(it.id) }),
-    hint: it.hint ? () => t3("moreHint") : void 0,
+    title: () => t4("hide", { name: t4(it.id) }),
+    hint: it.hint ? () => t4("moreHint") : void 0,
     default: false,
     onChange: () => hooks.apply()
   }])));
@@ -1804,7 +1906,7 @@
   // src/plugins/sidebarHide/index.js
   var STYLE_ID = "plugin:sidebarHide:rules";
   var NAV = 'header[role="banner"]';
-  var hiddenItems = () => ITEMS.filter((it) => settings3.store[keyOf(it.id)]);
+  var hiddenItems = () => ITEMS.filter((it) => settings4.store[keyOf(it.id)]);
   function apply3() {
     const list = hiddenItems();
     if (!list.length) {
@@ -1815,10 +1917,10 @@
   }
   var sidebarHide_default = definePlugin({
     name: "sidebarHide",
-    title: () => t3("title"),
-    description: () => t3("desc"),
+    title: () => t4("title"),
+    description: () => t4("desc"),
     enabledByDefault: false,
-    settings: settings3,
+    settings: settings4,
     start() {
       hooks.apply = apply3;
       apply3();
@@ -1831,12 +1933,12 @@
   });
 
   // yx-plugins:plugins
-  var plugins_default = [gifFav_default, sidebarHide_default];
+  var plugins_default = [embedLink_default, gifFav_default, sidebarHide_default];
 
   // src/core/ui/menu.js
   var STAR_PATH = "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
   function injectMenu(roots) {
-    if (!settings.store.menuItem) {
+    if (!settings2.store.menuItem) {
       qAll(roots, ".yx-menu-item").forEach((n) => n.remove());
       return;
     }
@@ -1894,11 +1996,11 @@
       }
     });
   }
-  var timer = 0;
+  var timer2 = 0;
   var schedule = () => {
-    if (timer) return;
-    timer = setTimeout(() => {
-      timer = 0;
+    if (timer2) return;
+    timer2 = setTimeout(() => {
+      timer2 = 0;
       scan();
     }, 150);
   };
@@ -1979,7 +2081,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.11", location.href);
+  LOG("loaded v0.8.12", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   initThemes();
