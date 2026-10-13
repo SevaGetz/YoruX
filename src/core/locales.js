@@ -17,6 +17,7 @@ export default {
     stLoading: 'Загрузка…', stOk: 'Загружено', stError: 'Ошибка загрузки', stCached: 'Не удалось обновить, используется кэш',
     refresh: 'Обновить', remove: 'Удалить', customCss: 'Свой CSS', customPh: '/* твой CSS */', noThemes: 'Тем пока нет',
     version: 'Версия', repo: 'Репозиторий', update: 'Проверить обновление',
+    upToDate: 'Установлена последняя версия (v{v})', updateAvail: 'Доступна v{v}, открываю установку', updateErr: 'Не удалось проверить обновление',
   },
   en: {
     back: 'Back', close: 'Close',
@@ -36,5 +37,6 @@ export default {
     stLoading: 'Loading…', stOk: 'Loaded', stError: 'Load failed', stCached: 'Update failed, using cache',
     refresh: 'Refresh', remove: 'Remove', customCss: 'Custom CSS', customPh: '/* your CSS */', noThemes: 'No themes yet',
     version: 'Version', repo: 'Repository', update: 'Check for updates',
+    upToDate: 'You have the latest version (v{v})', updateAvail: 'v{v} is available, opening the installer', updateErr: 'Could not check for updates',
   },
 };

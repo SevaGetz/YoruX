@@ -105,12 +105,36 @@ function renderBackup(box) {
 /* ---------- page "General" ---------- */
 const openUrl = (url) => (typeof GM_openInTab === 'function' ? GM_openInTab(url, { active: true }) : window.open(url, '_blank'));
 
+// Версия сравнивается по числам: 0.8.12 < 0.8.103
+const isNewer = (a, b) => {
+  const x = a.split('.').map(Number); const y = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    const d = (x[i] || 0) - (y[i] || 0);
+    if (d) return d > 0;
+  }
+  return false;
+};
+
+// Проверяем версию запросом в фоне. Вкладку с установкой открываем, только если есть что ставить
+function checkUpdate() {
+  GM_xmlhttpRequest({
+    method: 'GET', url: __RAW__ + '?t=' + Date.now(), responseType: 'text', timeout: 15000,
+    onload: (r) => {
+      const m = r.status >= 200 && r.status < 300 && /@version\s+(\S+)/.exec(r.responseText || '');
+      if (!m) { toast(t('updateErr')); return; }
+      if (isNewer(m[1], __VERSION__)) { toast(t('updateAvail', { v: m[1] })); openUrl(__RAW__); } else toast(t('upToDate', { v: __VERSION__ }));
+    },
+    onerror: () => toast(t('updateErr')),
+    ontimeout: () => toast(t('updateErr')),
+  });
+}
+
 function renderGeneral(box) {
   box.append(
     h('div', { class: 'yx-opts' }, optionRows(general)),
     h('div', { class: 'yx-btns' },
       h('button', { type: 'button', onclick: () => openUrl('https://github.com/' + __REPO__) }, t('repo')),
-      h('button', { type: 'button', onclick: () => openUrl(__RAW__) }, t('update'))),
+      h('button', { type: 'button', onclick: checkUpdate }, t('update'))),
     h('div', { class: 'yx-hint', style: { paddingTop: '12px' } }, t('version') + ': v' + __VERSION__));
 }
 
