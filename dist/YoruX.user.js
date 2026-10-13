@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.9.19
+// @version      0.9.0
 // @description  YoruX: modular mod for X/Twitter
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -896,12 +896,12 @@
     if (Date.now() - read(LAST_CHECK, 0) < EVERY) return;
     write(LAST_CHECK, Date.now());
     fetchLatest().then((v) => {
-      if (isNewer(v, "0.9.19")) showReloadPrompt(v, "available");
+      if (isNewer(v, "0.9.0")) showReloadPrompt(v, "available");
     }).catch(() => {
     });
   }
   function initUpdateWatch() {
-    write(RUNNING, "0.9.19");
+    write(RUNNING, "0.9.0");
     setTimeout(autoCheck, 3e3);
     if (typeof GM_addValueChangeListener !== "function") return;
     GM_addValueChangeListener(RUNNING, (name, oldV, newV, remote) => {
@@ -911,7 +911,7 @@
         v = typeof newV === "string" ? JSON.parse(newV) : newV;
       } catch (e) {
       }
-      if (typeof v === "string" && isNewer(v, "0.9.19")) showReloadPrompt(v);
+      if (typeof v === "string" && isNewer(v, "0.9.0")) showReloadPrompt(v);
     });
   }
 
@@ -942,7 +942,7 @@
   var BASE = "0.8";
   var hadData = read("yorux:migrated:gifFav", null) !== null;
   var keyOf = (v) => String(v).split(".").slice(0, 2).join(".");
-  var current = keyOf("0.9.19");
+  var current = keyOf("0.9.0");
   var releases = () => releases_default.filter((e) => !isNewer(e.v, current)).sort((a, b) => isNewer(a.v, b.v) ? -1 : 1);
   var renderEntries = (list) => h("div", { class: "yx-news" }, list.flatMap((e) => [
     h("h3", null, "v" + e.v, e.date ? h("span", null, e.date) : null),
@@ -961,7 +961,7 @@
     if (isNewer(current, seen)) write(KEY2, current);
     if (!fresh.length) return;
     setTimeout(() => showPop("news", {
-      title: t("newsTitle", { v: "0.9.19" }),
+      title: t("newsTitle", { v: "0.9.0" }),
       body: renderEntries(fresh),
       buttons: [
         { label: t("allChanges"), onclick: (box) => {
@@ -1108,10 +1108,10 @@
   var openUrl = (url) => typeof GM_openInTab === "function" ? GM_openInTab(url, { active: true }) : window.open(url, "_blank");
   function checkUpdate() {
     fetchLatest().then((v) => {
-      if (isNewer(v, "0.9.19")) {
+      if (isNewer(v, "0.9.0")) {
         openInstaller();
         showReloadPrompt(v, "pending");
-      } else toast(t("upToDate", { v: "0.9.19" }));
+      } else toast(t("upToDate", { v: "0.9.0" }));
     }).catch(() => toast(t("updateErr")));
   }
   function renderGeneral(box) {
@@ -1123,7 +1123,7 @@
         h("button", { type: "button", onclick: () => openUrl("https://github.com/SevaGetz/YoruX") }, t("repo")),
         h("button", { type: "button", onclick: checkUpdate }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.9.19")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.9.0")
     );
   }
   function getPages() {
@@ -1167,7 +1167,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.9.19"),
+        h("span", { class: "yx-ver" }, "v0.9.0"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -2278,7 +2278,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.9.19", location.href);
+  LOG("loaded v0.9.0", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   initThemes();
