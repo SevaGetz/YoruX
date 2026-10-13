@@ -63,7 +63,14 @@ export const CORE_CSS = `
   .yx-empty{color:var(--yx-sub);text-align:center;padding:32px 0}
   .yx-menu-item{cursor:pointer}
   .yx-modal.yx-small{width:min(380px,94vw);height:auto}
-  .yx-modal.yx-pop{position:fixed;right:20px;bottom:20px;z-index:2147483646}
+  .yx-pops{position:fixed;right:20px;bottom:20px;z-index:2147483646;display:flex;flex-direction:column;gap:12px;align-items:flex-end;pointer-events:none}
+  .yx-pops .yx-pop{pointer-events:auto}
+  .yx-news h3{margin:14px 0 4px;font-size:15px;line-height:20px;font-weight:700}
+  .yx-news h3:first-child{margin-top:0}
+  .yx-news h3 span{color:var(--yx-sub);font-weight:400;font-size:13px;margin-left:8px}
+  .yx-news ul{margin:0;padding-left:18px;font-size:14px;line-height:19px}
+  .yx-news li{margin:3px 0}
+  .yx-pop .yx-news{max-height:40vh;overflow:auto}
   .yx-dlg{padding:20px}
   .yx-dlg h2{margin:0 0 8px;font-size:20px;line-height:24px;font-weight:800}
   .yx-dlg p{margin:0;color:var(--yx-sub);font-size:15px;line-height:20px}

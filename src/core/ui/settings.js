@@ -8,6 +8,7 @@ import { getThemes } from '../themes';
 import { isNewer } from '../version';
 import { showReloadPrompt } from './reload';
 import { fetchLatest } from '../updater';
+import { releases, renderEntries } from '../changelog';
 import { openInstaller } from '../install';
 
 const sw = (checked, onChange) => {
@@ -70,6 +71,12 @@ function renderPlugins(box) {
   draw();
 }
 
+/* ---------- page "What's new" ---------- */
+function renderChangelog(box) {
+  const list = releases();
+  box.append(list.length ? renderEntries(list) : h('div', { class: 'yx-empty' }, t('nothing')));
+}
+
 /* ---------- page "Backup" ---------- */
 export function downloadText(name, text) {
   const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
@@ -130,6 +137,7 @@ function getPages() {
   const pages = [
     { id: 'general', icon: I.tune, title: t('general'), desc: t('generalDesc'), render: renderGeneral },
     { id: 'plugins', icon: I.plugins, title: t('plugins'), desc: t('pluginsDesc', { n: on, m: plugins.length }), render: renderPlugins },
+    { id: 'changelog', icon: I.news, title: t('changelog'), desc: t('changelogDesc'), render: renderChangelog },
     { id: 'themes', icon: I.themes, title: t('themes'), desc: t('themesDesc', { n: getThemes().links.filter((l) => l.enabled).length }), render: renderThemes },
   ];
   plugins.filter((p) => p.started && p.tile).forEach((p) => pages.push({

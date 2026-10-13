@@ -22,6 +22,8 @@ export default {
     reloadBtn: 'Перезагрузить', later: 'Позже', install: 'Установить',
     availTitle: 'Доступна v{v}', reloadAvail: 'Вышла новая версия YoruX. Нажмите «Установить», затем перезагрузите вкладку.',
     autoUpdate: 'Проверять обновления при открытии X', autoUpdateHint: 'Не чаще раза в 2 часа',
+    changelog: 'Что нового', changelogDesc: 'Список изменений по версиям',
+    newsTitle: 'YoruX обновлён до v{v}', allChanges: 'Все изменения',
   },
   en: {
     back: 'Back', close: 'Close',
@@ -46,5 +48,7 @@ export default {
     reloadBtn: 'Reload', later: 'Later', install: 'Install',
     availTitle: 'v{v} is available', reloadAvail: 'A new YoruX version is out. Click "Install", then reload the tab.',
     autoUpdate: 'Check for updates when X opens', autoUpdateHint: 'At most once every 2 hours',
+    changelog: "What's new", changelogDesc: 'Changes by version',
+    newsTitle: 'YoruX updated to v{v}', allChanges: 'All changes',
   },
 };

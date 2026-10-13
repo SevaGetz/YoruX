@@ -5,6 +5,7 @@ import { registerPlugins } from '@core/api';
 import { initScanner } from '@core/scanner';
 import { initThemes } from '@core/themes';
 import { initUpdateWatch } from '@core/updater';
+import { initChangelog } from '@core/changelog';
 import { watchMenu } from '@core/ui/menu';
 import { openSettings } from '@core/ui/settings';
 import { CORE_CSS } from '@core/ui/styles';
@@ -16,5 +17,6 @@ initThemes();
 watchMenu();
 initScanner();
 initUpdateWatch();
+initChangelog(openSettings);
 
 if (typeof GM_registerMenuCommand === 'function') GM_registerMenuCommand('YoruX', () => openSettings());
