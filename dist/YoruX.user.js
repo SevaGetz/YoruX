@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.12
+// @version      0.8.13
 // @description  YoruX: modular mod for X/Twitter
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -922,10 +922,10 @@
           toast(t("updateErr"));
           return;
         }
-        if (isNewer(m[1], "0.8.12")) {
+        if (isNewer(m[1], "0.8.13")) {
           toast(t("updateAvail", { v: m[1] }));
           openUrl("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js");
-        } else toast(t("upToDate", { v: "0.8.12" }));
+        } else toast(t("upToDate", { v: "0.8.13" }));
       },
       onerror: () => toast(t("updateErr")),
       ontimeout: () => toast(t("updateErr"))
@@ -940,7 +940,7 @@
         h("button", { type: "button", onclick: () => openUrl("https://github.com/SevaGetz/YoruX") }, t("repo")),
         h("button", { type: "button", onclick: checkUpdate }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.12")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.13")
     );
   }
   function getPages() {
@@ -983,7 +983,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.12"),
+        h("span", { class: "yx-ver" }, "v0.8.13"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -2081,7 +2081,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.12", location.href);
+  LOG("loaded v0.8.13", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   initThemes();
