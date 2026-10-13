@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.18
+// @version      0.9.19
 // @description  YoruX: modular mod for X/Twitter
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -188,7 +188,11 @@
       availTitle: "Доступна v{v}",
       reloadAvail: "Вышла новая версия YoruX. Нажмите «Установить», затем перезагрузите вкладку.",
       autoUpdate: "Проверять обновления при открытии X",
-      autoUpdateHint: "Не чаще раза в 2 часа"
+      autoUpdateHint: "Не чаще раза в 2 часа",
+      changelog: "Что нового",
+      changelogDesc: "Список изменений по версиям",
+      newsTitle: "YoruX обновлён до v{v}",
+      allChanges: "Все изменения"
     },
     en: {
       back: "Back",
@@ -244,7 +248,11 @@
       availTitle: "v{v} is available",
       reloadAvail: 'A new YoruX version is out. Click "Install", then reload the tab.',
       autoUpdate: "Check for updates when X opens",
-      autoUpdateHint: "At most once every 2 hours"
+      autoUpdateHint: "At most once every 2 hours",
+      changelog: "What's new",
+      changelogDesc: "Changes by version",
+      newsTitle: "YoruX updated to v{v}",
+      allChanges: "All changes"
     }
   };
 
@@ -539,6 +547,7 @@
     refresh: '<path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4"/>',
     trash: '<path d="M5 7h14M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>',
     themes: '<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.5-.7 1.5-1.4 0-.9-.6-1.3-.6-2.1 0-.9.7-1.5 1.6-1.5H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/>',
+    news: '<path d="M6 3h8l5 5v13H6zM14 3v5h5M9 12h7M9 16h7"/>',
     tune: '<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>'
   };
   var iconBtn = (title, inner, fill, onclick) => h("button", { type: "button", class: "yx-icon", title, onclick }, ico(inner, fill));
@@ -813,39 +822,56 @@
     a.remove();
   }
 
-  // src/core/ui/reload.js
-  function showReloadPrompt(version, mode = "installed") {
-    const old = document.querySelector(".yx-pop");
+  // src/core/ui/pop.js
+  function showPop(key, { title, body, buttons }) {
+    const old = document.querySelector('.yx-pop[data-key="' + key + '"]');
     if (old) old.remove();
+    let host = document.querySelector(".yx-pops");
+    if (!host) {
+      host = h("div", { class: "yx-pops" });
+      document.body.appendChild(host);
+    }
     const cs = getComputedStyle(document.body);
     const bg = cs.backgroundColor === "rgba(0, 0, 0, 0)" ? "rgb(0, 0, 0)" : cs.backgroundColor;
     const [r, g, b] = (bg.match(/\d+/g) || [0, 0, 0]).map(Number);
     const box = h("div", { class: "yx-modal yx-small yx-pop", role: "alertdialog" });
+    box.dataset.key = key;
     box.dataset.theme = (r * 299 + g * 587 + b * 114) / 1e3 > 128 ? "light" : "dark";
     box.style.background = bg;
     box.style.color = cs.color;
     box.style.fontFamily = xFont();
     box.style.setProperty("--yx-bg", bg);
     box.style.setProperty("--yx-fg", cs.color);
-    const avail = mode === "available";
-    const text = { installed: "reloadText", pending: "reloadPending", available: "reloadAvail" }[mode] || "reloadText";
-    const main = avail ? h("button", { type: "button", class: "yx-primary", onclick: () => {
-      openInstaller();
-      showReloadPrompt(version, "pending");
-    } }, t("install")) : h("button", { type: "button", class: "yx-primary", onclick: () => location.reload() }, t("reloadBtn"));
     box.append(h(
       "div",
       { class: "yx-dlg" },
-      h("h2", null, t(avail ? "availTitle" : "reloadTitle", { v: version })),
-      h("p", null, t(text, { v: version })),
-      h(
-        "div",
-        { class: "yx-btns" },
-        h("button", { type: "button", onclick: () => box.remove() }, t("later")),
-        main
-      )
+      h("h2", null, title),
+      body,
+      h("div", { class: "yx-btns" }, buttons.map((b2) => h("button", {
+        type: "button",
+        class: b2.primary ? "yx-primary" : null,
+        onclick: () => b2.onclick(box)
+      }, b2.label)))
     ));
-    document.body.appendChild(box);
+    host.appendChild(box);
+    return box;
+  }
+
+  // src/core/ui/reload.js
+  function showReloadPrompt(version, mode = "installed") {
+    const avail = mode === "available";
+    const text = { installed: "reloadText", pending: "reloadPending", available: "reloadAvail" }[mode] || "reloadText";
+    showPop("reload", {
+      title: t(avail ? "availTitle" : "reloadTitle", { v: version }),
+      body: h("p", null, t(text, { v: version })),
+      buttons: [
+        { label: t("later"), onclick: (box) => box.remove() },
+        avail ? { label: t("install"), primary: true, onclick: () => {
+          openInstaller();
+          showReloadPrompt(version, "pending");
+        } } : { label: t("reloadBtn"), primary: true, onclick: () => location.reload() }
+      ]
+    });
   }
 
   // src/core/updater.js
@@ -870,12 +896,12 @@
     if (Date.now() - read(LAST_CHECK, 0) < EVERY) return;
     write(LAST_CHECK, Date.now());
     fetchLatest().then((v) => {
-      if (isNewer(v, "0.8.18")) showReloadPrompt(v, "available");
+      if (isNewer(v, "0.9.19")) showReloadPrompt(v, "available");
     }).catch(() => {
     });
   }
   function initUpdateWatch() {
-    write(RUNNING, "0.8.18");
+    write(RUNNING, "0.9.19");
     setTimeout(autoCheck, 3e3);
     if (typeof GM_addValueChangeListener !== "function") return;
     GM_addValueChangeListener(RUNNING, (name, oldV, newV, remote) => {
@@ -885,8 +911,66 @@
         v = typeof newV === "string" ? JSON.parse(newV) : newV;
       } catch (e) {
       }
-      if (typeof v === "string" && isNewer(v, "0.8.18")) showReloadPrompt(v);
+      if (typeof v === "string" && isNewer(v, "0.9.19")) showReloadPrompt(v);
     });
+  }
+
+  // src/releases.js
+  var releases_default = [
+    {
+      v: "0.9",
+      date: "2026-10-13",
+      ru: [
+        "Плагин «Скрыть пункты меню»: отключает выбранные пункты бокового меню (Обзор, Grok, Premium и др.)",
+        "Плагин «Ссылки с эмбедом»: «Поделиться → Копировать ссылку» копирует ссылку через fixupx.com, fxtwitter.com, vxtwitter.com, fixvx.com или свой домен",
+        "Автопроверка обновлений при открытии X (не чаще раза в 2 часа) и карточка «Перезагрузить вкладку» после обновления",
+        "Кнопка «Проверить обновление» больше не оставляет лишнюю вкладку",
+        "Карточка «Что нового» после обновления и страница со всеми изменениями в настройках"
+      ],
+      en: [
+        "Hide menu items plugin: turns off selected sidebar items (Explore, Grok, Premium, etc.)",
+        "Embed links plugin: Share → Copy link copies the link through fixupx.com, fxtwitter.com, vxtwitter.com, fixvx.com or your own domain",
+        'Automatic update check when X opens (at most once every 2 hours) and a "Reload the tab" card after an update',
+        'The "Check for updates" button no longer leaves an extra tab behind',
+        `A "What's new" card after updates and a page with all changes in the settings`
+      ]
+    }
+  ];
+
+  // src/core/changelog.js
+  var KEY2 = "yorux:changelogSeen";
+  var BASE = "0.8";
+  var hadData = read("yorux:migrated:gifFav", null) !== null;
+  var keyOf = (v) => String(v).split(".").slice(0, 2).join(".");
+  var current = keyOf("0.9.19");
+  var releases = () => releases_default.filter((e) => !isNewer(e.v, current)).sort((a, b) => isNewer(a.v, b.v) ? -1 : 1);
+  var renderEntries = (list) => h("div", { class: "yx-news" }, list.flatMap((e) => [
+    h("h3", null, "v" + e.v, e.date ? h("span", null, e.date) : null),
+    h("ul", null, (e[lang()] || e.en || []).map((s) => h("li", null, s)))
+  ]));
+  function initChangelog(openSettings2) {
+    let seen = read(KEY2, null);
+    if (seen === null) {
+      if (!hadData) {
+        write(KEY2, current);
+        return;
+      }
+      seen = BASE;
+    }
+    const fresh = releases().filter((e) => isNewer(e.v, seen)).slice(0, 3);
+    if (isNewer(current, seen)) write(KEY2, current);
+    if (!fresh.length) return;
+    setTimeout(() => showPop("news", {
+      title: t("newsTitle", { v: "0.9.19" }),
+      body: renderEntries(fresh),
+      buttons: [
+        { label: t("allChanges"), onclick: (box) => {
+          box.remove();
+          openSettings2("changelog");
+        } },
+        { label: t("close"), primary: true, onclick: (box) => box.remove() }
+      ]
+    }), 1500);
   }
 
   // src/core/ui/settings.js
@@ -965,6 +1049,10 @@
     search.addEventListener("input", draw);
     draw();
   }
+  function renderChangelog(box) {
+    const list = releases();
+    box.append(list.length ? renderEntries(list) : h("div", { class: "yx-empty" }, t("nothing")));
+  }
   function downloadText(name, text) {
     const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
     const a = h("a", { href: url, download: name });
@@ -1020,10 +1108,10 @@
   var openUrl = (url) => typeof GM_openInTab === "function" ? GM_openInTab(url, { active: true }) : window.open(url, "_blank");
   function checkUpdate() {
     fetchLatest().then((v) => {
-      if (isNewer(v, "0.8.18")) {
+      if (isNewer(v, "0.9.19")) {
         openInstaller();
         showReloadPrompt(v, "pending");
-      } else toast(t("upToDate", { v: "0.8.18" }));
+      } else toast(t("upToDate", { v: "0.9.19" }));
     }).catch(() => toast(t("updateErr")));
   }
   function renderGeneral(box) {
@@ -1035,7 +1123,7 @@
         h("button", { type: "button", onclick: () => openUrl("https://github.com/SevaGetz/YoruX") }, t("repo")),
         h("button", { type: "button", onclick: checkUpdate }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.18")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.9.19")
     );
   }
   function getPages() {
@@ -1043,6 +1131,7 @@
     const pages = [
       { id: "general", icon: I.tune, title: t("general"), desc: t("generalDesc"), render: renderGeneral },
       { id: "plugins", icon: I.plugins, title: t("plugins"), desc: t("pluginsDesc", { n: on, m: plugins.length }), render: renderPlugins },
+      { id: "changelog", icon: I.news, title: t("changelog"), desc: t("changelogDesc"), render: renderChangelog },
       { id: "themes", icon: I.themes, title: t("themes"), desc: t("themesDesc", { n: getThemes().links.filter((l) => l.enabled).length }), render: renderThemes }
     ];
     plugins.filter((p) => p.started && p.tile).forEach((p) => pages.push({
@@ -1078,7 +1167,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.18"),
+        h("span", { class: "yx-ver" }, "v0.9.19"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -1086,9 +1175,9 @@
     ov.appendChild(box);
     document.body.appendChild(ov);
     let cleanup = null;
-    let current = null;
+    let current2 = null;
     function show(id) {
-      current = id;
+      current2 = id;
       back.title = t("back");
       const xb = box.querySelector(".yx-head .yx-icon:last-child");
       if (xb) xb.title = t("close");
@@ -1115,7 +1204,7 @@
       back.hidden = false;
       cleanup = page.render(body) || null;
     }
-    const offLang = onLangChange(() => show(current));
+    const offLang = onLangChange(() => show(current2));
     const onKey = (e) => {
       if (e.key === "Escape") {
         e.stopPropagation();
@@ -1235,11 +1324,11 @@
 `;
 
   // src/plugins/gifFav/store.js
-  var KEY2 = "gifFavs";
+  var KEY3 = "gifFavs";
   var subs3 = /* @__PURE__ */ new Set();
   var isHttp = (u) => typeof u === "string" && /^https?:/.test(u);
   var load2 = () => {
-    const a = read(KEY2, []);
+    const a = read(KEY3, []);
     return Array.isArray(a) ? a : [];
   };
   var has = (u) => load2().some((f) => f.url === u);
@@ -1248,7 +1337,7 @@
     return () => subs3.delete(cb);
   };
   function save2(a) {
-    write(KEY2, a);
+    write(KEY3, a);
     subs3.forEach((f) => f());
   }
   function toggle(item) {
@@ -1929,7 +2018,7 @@
     { id: "post", sel: tid("SideNav_NewTweet_Button") },
     { id: "account", sel: tid("SideNav_AccountSwitcher_Button") }
   ];
-  var keyOf = (id) => "hide_" + id;
+  var keyOf2 = (id) => "hide_" + id;
 
   // src/plugins/sidebarHide/i18n.js
   var t4 = createT({
@@ -1990,7 +2079,7 @@
   // src/plugins/sidebarHide/settings.js
   var hooks = { apply: () => {
   } };
-  var settings4 = definePluginSettings(Object.fromEntries(ITEMS.map((it) => [keyOf(it.id), {
+  var settings4 = definePluginSettings(Object.fromEntries(ITEMS.map((it) => [keyOf2(it.id), {
     type: "boolean",
     title: () => t4("hide", { name: t4(it.id) }),
     hint: it.hint ? () => t4("moreHint") : void 0,
@@ -2001,7 +2090,7 @@
   // src/plugins/sidebarHide/index.js
   var STYLE_ID = "plugin:sidebarHide:rules";
   var NAV = 'header[role="banner"]';
-  var hiddenItems = () => ITEMS.filter((it) => settings4.store[keyOf(it.id)]);
+  var hiddenItems = () => ITEMS.filter((it) => settings4.store[keyOf2(it.id)]);
   function apply3() {
     const list = hiddenItems();
     if (!list.length) {
@@ -2172,7 +2261,14 @@
   .yx-empty{color:var(--yx-sub);text-align:center;padding:32px 0}
   .yx-menu-item{cursor:pointer}
   .yx-modal.yx-small{width:min(380px,94vw);height:auto}
-  .yx-modal.yx-pop{position:fixed;right:20px;bottom:20px;z-index:2147483646}
+  .yx-pops{position:fixed;right:20px;bottom:20px;z-index:2147483646;display:flex;flex-direction:column;gap:12px;align-items:flex-end;pointer-events:none}
+  .yx-pops .yx-pop{pointer-events:auto}
+  .yx-news h3{margin:14px 0 4px;font-size:15px;line-height:20px;font-weight:700}
+  .yx-news h3:first-child{margin-top:0}
+  .yx-news h3 span{color:var(--yx-sub);font-weight:400;font-size:13px;margin-left:8px}
+  .yx-news ul{margin:0;padding-left:18px;font-size:14px;line-height:19px}
+  .yx-news li{margin:3px 0}
+  .yx-pop .yx-news{max-height:40vh;overflow:auto}
   .yx-dlg{padding:20px}
   .yx-dlg h2{margin:0 0 8px;font-size:20px;line-height:24px;font-weight:800}
   .yx-dlg p{margin:0;color:var(--yx-sub);font-size:15px;line-height:20px}
@@ -2182,12 +2278,13 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.18", location.href);
+  LOG("loaded v0.9.19", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   initThemes();
   watchMenu();
   initScanner();
   initUpdateWatch();
+  initChangelog(openSettings);
   if (typeof GM_registerMenuCommand === "function") GM_registerMenuCommand("YoruX", () => openSettings());
 })();
