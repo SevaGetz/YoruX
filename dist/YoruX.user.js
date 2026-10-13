@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.17
+// @version      0.8.18
 // @description  YoruX: modular mod for X/Twitter
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -804,7 +804,14 @@
   };
 
   // src/core/install.js
-  var openInstaller = () => typeof GM_openInTab === "function" ? GM_openInTab("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js", { active: true }) : window.open("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js", "_blank");
+  function openInstaller() {
+    const a = document.createElement("a");
+    a.href = "https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js";
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
 
   // src/core/ui/reload.js
   function showReloadPrompt(version, mode = "installed") {
@@ -863,12 +870,12 @@
     if (Date.now() - read(LAST_CHECK, 0) < EVERY) return;
     write(LAST_CHECK, Date.now());
     fetchLatest().then((v) => {
-      if (isNewer(v, "0.8.17")) showReloadPrompt(v, "available");
+      if (isNewer(v, "0.8.18")) showReloadPrompt(v, "available");
     }).catch(() => {
     });
   }
   function initUpdateWatch() {
-    write(RUNNING, "0.8.17");
+    write(RUNNING, "0.8.18");
     setTimeout(autoCheck, 3e3);
     if (typeof GM_addValueChangeListener !== "function") return;
     GM_addValueChangeListener(RUNNING, (name, oldV, newV, remote) => {
@@ -878,7 +885,7 @@
         v = typeof newV === "string" ? JSON.parse(newV) : newV;
       } catch (e) {
       }
-      if (typeof v === "string" && isNewer(v, "0.8.17")) showReloadPrompt(v);
+      if (typeof v === "string" && isNewer(v, "0.8.18")) showReloadPrompt(v);
     });
   }
 
@@ -1013,10 +1020,10 @@
   var openUrl = (url) => typeof GM_openInTab === "function" ? GM_openInTab(url, { active: true }) : window.open(url, "_blank");
   function checkUpdate() {
     fetchLatest().then((v) => {
-      if (isNewer(v, "0.8.17")) {
+      if (isNewer(v, "0.8.18")) {
         openInstaller();
         showReloadPrompt(v, "pending");
-      } else toast(t("upToDate", { v: "0.8.17" }));
+      } else toast(t("upToDate", { v: "0.8.18" }));
     }).catch(() => toast(t("updateErr")));
   }
   function renderGeneral(box) {
@@ -1028,7 +1035,7 @@
         h("button", { type: "button", onclick: () => openUrl("https://github.com/SevaGetz/YoruX") }, t("repo")),
         h("button", { type: "button", onclick: checkUpdate }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.17")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.18")
     );
   }
   function getPages() {
@@ -1071,7 +1078,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.17"),
+        h("span", { class: "yx-ver" }, "v0.8.18"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -2175,7 +2182,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.17", location.href);
+  LOG("loaded v0.8.18", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   initThemes();
