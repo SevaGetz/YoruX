@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.9
+// @version      0.8.10
 // @description  YoruX: modular mod for X/Twitter
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -801,7 +801,7 @@
         h("button", { type: "button", onclick: () => openUrl("https://github.com/SevaGetz/YoruX") }, t("repo")),
         h("button", { type: "button", onclick: () => openUrl("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js") }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.9")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.10")
     );
   }
   function getPages() {
@@ -844,7 +844,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.9"),
+        h("span", { class: "yx-ver" }, "v0.8.10"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -1652,7 +1652,7 @@
     name: "gifFav",
     title: () => t2("title"),
     description: () => t2("desc"),
-    enabledByDefault: true,
+    enabledByDefault: false,
     settings: settings2,
     styles: CSS,
     tile: {
@@ -1780,7 +1780,7 @@
     name: "sidebarHide",
     title: () => t3("title"),
     description: () => t3("desc"),
-    enabledByDefault: true,
+    enabledByDefault: false,
     settings: settings3,
     start() {
       hooks.apply = apply3;
@@ -1942,7 +1942,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.9", location.href);
+  LOG("loaded v0.8.10", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   initThemes();
