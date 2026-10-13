@@ -105,7 +105,6 @@ function renderBackup(box) {
 /* ---------- page "General" ---------- */
 const openUrl = (url) => (typeof GM_openInTab === 'function' ? GM_openInTab(url, { active: true }) : window.open(url, '_blank'));
 
-// Версия сравнивается по числам: 0.8.12 < 0.8.103
 const isNewer = (a, b) => {
   const x = a.split('.').map(Number); const y = b.split('.').map(Number);
   for (let i = 0; i < Math.max(x.length, y.length); i++) {
@@ -115,7 +114,6 @@ const isNewer = (a, b) => {
   return false;
 };
 
-// Проверяем версию запросом в фоне. Вкладку с установкой открываем, только если есть что ставить
 function checkUpdate() {
   GM_xmlhttpRequest({
     method: 'GET', url: __RAW__ + '?t=' + Date.now(), responseType: 'text', timeout: 15000,

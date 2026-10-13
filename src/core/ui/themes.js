@@ -51,7 +51,6 @@ export function renderThemes(box) {
   area.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => setCustom(area.value, null), 400); });
 
   box.append(
-    h('div', { class: 'yx-hint' }, t('themesHint')),
     h('div', { class: 'yx-add' }, input, h('button', { type: 'button', class: 'yx-primary', onclick: add }, t('add'))),
     list,
     h('div', { class: 'yx-sect' }, t('customCss'), sw(s.customOn, (v) => setCustom(null, v))),
