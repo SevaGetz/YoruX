@@ -16,7 +16,10 @@ export default {
     stLoading: 'Загрузка…', stOk: 'Загружено', stError: 'Ошибка загрузки', stCached: 'Не удалось обновить, используется кэш',
     refresh: 'Обновить', remove: 'Удалить', customCss: 'Свой CSS', customPh: '/* твой CSS */', noThemes: 'Тем пока нет',
     version: 'Версия', repo: 'Репозиторий', update: 'Проверить обновление',
-    upToDate: 'Установлена последняя версия (v{v})', updateAvail: 'Доступна v{v}, открываю установку', updateErr: 'Не удалось проверить обновление',
+    upToDate: 'Установлена последняя версия (v{v})', updateErr: 'Не удалось проверить обновление',
+    reloadTitle: 'Обновление до v{v}', reloadText: 'Новая версия YoruX установлена. Перезагрузите вкладку, чтобы применить изменения.',
+    reloadPending: 'Установите v{v} во вкладке, которая открылась, затем перезагрузите эту вкладку, чтобы применить изменения.',
+    reloadBtn: 'Перезагрузить', later: 'Позже',
   },
   en: {
     back: 'Back', close: 'Close',
@@ -35,6 +38,9 @@ export default {
     stLoading: 'Loading…', stOk: 'Loaded', stError: 'Load failed', stCached: 'Update failed, using cache',
     refresh: 'Refresh', remove: 'Remove', customCss: 'Custom CSS', customPh: '/* your CSS */', noThemes: 'No themes yet',
     version: 'Version', repo: 'Repository', update: 'Check for updates',
-    upToDate: 'You have the latest version (v{v})', updateAvail: 'v{v} is available, opening the installer', updateErr: 'Could not check for updates',
+    upToDate: 'You have the latest version (v{v})', updateErr: 'Could not check for updates',
+    reloadTitle: 'Update to v{v}', reloadText: 'A new YoruX version is installed. Reload the tab to apply the changes.',
+    reloadPending: 'Install v{v} in the tab that just opened, then reload this tab to apply the changes.',
+    reloadBtn: 'Reload', later: 'Later',
   },
 };

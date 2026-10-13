@@ -5,6 +5,8 @@ import { settings as general } from '../general';
 import { ico, I, iconBtn } from './icons';
 import { renderThemes } from './themes';
 import { getThemes } from '../themes';
+import { isNewer } from '../version';
+import { showReloadPrompt } from './reload';
 
 const sw = (checked, onChange) => {
   const i = h('input', { type: 'checkbox', checked: !!checked });
@@ -105,22 +107,13 @@ function renderBackup(box) {
 /* ---------- page "General" ---------- */
 const openUrl = (url) => (typeof GM_openInTab === 'function' ? GM_openInTab(url, { active: true }) : window.open(url, '_blank'));
 
-const isNewer = (a, b) => {
-  const x = a.split('.').map(Number); const y = b.split('.').map(Number);
-  for (let i = 0; i < Math.max(x.length, y.length); i++) {
-    const d = (x[i] || 0) - (y[i] || 0);
-    if (d) return d > 0;
-  }
-  return false;
-};
-
 function checkUpdate() {
   GM_xmlhttpRequest({
     method: 'GET', url: __RAW__ + '?t=' + Date.now(), responseType: 'text', timeout: 15000,
     onload: (r) => {
       const m = r.status >= 200 && r.status < 300 && /@version\s+(\S+)/.exec(r.responseText || '');
       if (!m) { toast(t('updateErr')); return; }
-      if (isNewer(m[1], __VERSION__)) { toast(t('updateAvail', { v: m[1] })); openUrl(__RAW__); } else toast(t('upToDate', { v: __VERSION__ }));
+      if (isNewer(m[1], __VERSION__)) { openUrl(__RAW__); showReloadPrompt(m[1], true); } else toast(t('upToDate', { v: __VERSION__ }));
     },
     onerror: () => toast(t('updateErr')),
     ontimeout: () => toast(t('updateErr')),
