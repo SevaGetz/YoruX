@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.10
+// @version      0.8.11
 // @description  YoruX: modular mod for X/Twitter
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -14,6 +14,7 @@
 // @grant        GM_openInTab
 // @connect      giphy.com
 // @connect      twimg.com
+// @connect      raw.githubusercontent.com
 // @run-at       document-idle
 // @updateURL    https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js
 // @downloadURL  https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js
@@ -174,7 +175,10 @@
       noThemes: "Тем пока нет",
       version: "Версия",
       repo: "Репозиторий",
-      update: "Проверить обновление"
+      update: "Проверить обновление",
+      upToDate: "Установлена последняя версия (v{v})",
+      updateAvail: "Доступна v{v}, открываю установку",
+      updateErr: "Не удалось проверить обновление"
     },
     en: {
       back: "Back",
@@ -219,7 +223,10 @@
       noThemes: "No themes yet",
       version: "Version",
       repo: "Repository",
-      update: "Check for updates"
+      update: "Check for updates",
+      upToDate: "You have the latest version (v{v})",
+      updateAvail: "v{v} is available, opening the installer",
+      updateErr: "Could not check for updates"
     }
   };
 
@@ -792,6 +799,36 @@
     ));
   }
   var openUrl = (url) => typeof GM_openInTab === "function" ? GM_openInTab(url, { active: true }) : window.open(url, "_blank");
+  var isNewer = (a, b) => {
+    const x = a.split(".").map(Number);
+    const y = b.split(".").map(Number);
+    for (let i = 0; i < Math.max(x.length, y.length); i++) {
+      const d = (x[i] || 0) - (y[i] || 0);
+      if (d) return d > 0;
+    }
+    return false;
+  };
+  function checkUpdate() {
+    GM_xmlhttpRequest({
+      method: "GET",
+      url: "https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js?t=" + Date.now(),
+      responseType: "text",
+      timeout: 15e3,
+      onload: (r) => {
+        const m = r.status >= 200 && r.status < 300 && /@version\s+(\S+)/.exec(r.responseText || "");
+        if (!m) {
+          toast(t("updateErr"));
+          return;
+        }
+        if (isNewer(m[1], "0.8.11")) {
+          toast(t("updateAvail", { v: m[1] }));
+          openUrl("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js");
+        } else toast(t("upToDate", { v: "0.8.11" }));
+      },
+      onerror: () => toast(t("updateErr")),
+      ontimeout: () => toast(t("updateErr"))
+    });
+  }
   function renderGeneral(box) {
     box.append(
       h("div", { class: "yx-opts" }, optionRows(settings)),
@@ -799,9 +836,9 @@
         "div",
         { class: "yx-btns" },
         h("button", { type: "button", onclick: () => openUrl("https://github.com/SevaGetz/YoruX") }, t("repo")),
-        h("button", { type: "button", onclick: () => openUrl("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js") }, t("update"))
+        h("button", { type: "button", onclick: checkUpdate }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.10")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.11")
     );
   }
   function getPages() {
@@ -844,7 +881,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.10"),
+        h("span", { class: "yx-ver" }, "v0.8.11"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -1942,7 +1979,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.10", location.href);
+  LOG("loaded v0.8.11", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   initThemes();
