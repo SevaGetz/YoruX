@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.14
+// @version      0.8.15
 // @description  YoruX: modular mod for X/Twitter
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -962,10 +962,10 @@
           toast(t("updateErr"));
           return;
         }
-        if (isNewer(m[1], "0.8.14")) {
+        if (isNewer(m[1], "0.8.15")) {
           openUrl("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js");
           showReloadPrompt(m[1], true);
-        } else toast(t("upToDate", { v: "0.8.14" }));
+        } else toast(t("upToDate", { v: "0.8.15" }));
       },
       onerror: () => toast(t("updateErr")),
       ontimeout: () => toast(t("updateErr"))
@@ -980,7 +980,7 @@
         h("button", { type: "button", onclick: () => openUrl("https://github.com/SevaGetz/YoruX") }, t("repo")),
         h("button", { type: "button", onclick: checkUpdate }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.14")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.15")
     );
   }
   function getPages() {
@@ -1023,7 +1023,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.14"),
+        h("span", { class: "yx-ver" }, "v0.8.15"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -2054,7 +2054,7 @@
   // src/core/updater.js
   var KEY3 = "yorux:running";
   function initUpdateWatch() {
-    write(KEY3, "0.8.14");
+    write(KEY3, "0.8.15");
     if (typeof GM_addValueChangeListener !== "function") return;
     GM_addValueChangeListener(KEY3, (name, oldV, newV, remote) => {
       if (!remote) return;
@@ -2063,7 +2063,7 @@
         v = typeof newV === "string" ? JSON.parse(newV) : newV;
       } catch (e) {
       }
-      if (typeof v === "string" && isNewer(v, "0.8.14")) showReloadPrompt(v);
+      if (typeof v === "string" && isNewer(v, "0.8.15")) showReloadPrompt(v);
     });
   }
 
@@ -2143,7 +2143,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.14", location.href);
+  LOG("loaded v0.8.15", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   initThemes();
