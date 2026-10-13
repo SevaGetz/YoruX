@@ -1,7 +1,7 @@
 /**
  * @name Catppuccin Mocha
  * @author Catppuccin (port for YoruX)
- * @version 1.1.0
+ * @version 1.1.1
  * @description Мягкая пастельная тема Catppuccin Mocha для X
  */
 /*
@@ -164,15 +164,16 @@ body, .PageContainer, #placeholder { background-color: var(--ctp-base) !importan
 a[aria-label^="Translated from"][aria-label$="by Google"] svg path { fill: var(--ctp-text) !important; }
 
 /* ---------- ЛС (XChat): живут в shadow DOM, Tailwind-классы вместо .r-xxxx ---------- */
+/* !important нужен: стили ЛС приходят через adoptedStyleSheets и по порядку каскада идут после наших <style> */
 /* YoruX кладёт стили темы и внутрь shadow-деревьев, поэтому эти правила там работают */
-.bg-background { background-color: var(--ctp-base); }
-.bg-gray-50 { background-color: var(--ctp-surface0); }        /* входящие сообщения, медиа */
-.bg-gray-100 { background-color: var(--ctp-surface1); }       /* карточки, превью ссылок */
-.bg-gray-300 { background-color: var(--ctp-surface2); }       /* заглушки аватаров */
-.bg-btn-tertiary { background-color: var(--ctp-mantle); }     /* меню и поповеры */
-.bg-chat-accent { background-color: var(--ctp-accent); }      /* свои сообщения */
-.bg-chat-accent, .bg-chat-accent * { color: var(--ctp-crust); }
-.text-foreground, .text-primary { color: var(--ctp-text); }
-.text-gray-700 { color: var(--ctp-subtext1); }
-.text-gray-500, .text-gray-600 { color: var(--ctp-overlay1); }
-.border, .border-t, .border-b, .border-l, .border-r, .border-gray-100, .border-gray-200 { border-color: var(--ctp-surface0); }
+.bg-background { background-color: var(--ctp-base) !important; }
+.bg-gray-50 { background-color: var(--ctp-surface0) !important; }        /* входящие сообщения, медиа */
+.bg-gray-100 { background-color: var(--ctp-surface1) !important; }       /* карточки, превью ссылок */
+.bg-gray-300 { background-color: var(--ctp-surface2) !important; }       /* заглушки аватаров */
+.bg-btn-tertiary { background-color: var(--ctp-mantle) !important; }     /* меню и поповеры */
+.bg-chat-accent { background-color: var(--ctp-accent) !important; }      /* свои сообщения */
+.bg-chat-accent, .bg-chat-accent * { color: var(--ctp-crust) !important; }
+.text-foreground, .text-primary { color: var(--ctp-text) !important; }
+.text-gray-700 { color: var(--ctp-subtext1) !important; }
+.text-gray-500, .text-gray-600 { color: var(--ctp-overlay1) !important; }
+.border, .border-t, .border-b, .border-l, .border-r, .border-gray-100, .border-gray-200 { border-color: var(--ctp-surface0) !important; }
