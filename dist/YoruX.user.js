@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.13
+// @version      0.8.14
 // @description  YoruX: modular mod for X/Twitter
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -13,6 +13,7 @@
 // @grant        GM_registerMenuCommand
 // @grant        GM_openInTab
 // @grant        GM_setClipboard
+// @grant        GM_addValueChangeListener
 // @connect      giphy.com
 // @connect      twimg.com
 // @connect      raw.githubusercontent.com
@@ -177,8 +178,12 @@
       repo: "Репозиторий",
       update: "Проверить обновление",
       upToDate: "Установлена последняя версия (v{v})",
-      updateAvail: "Доступна v{v}, открываю установку",
-      updateErr: "Не удалось проверить обновление"
+      updateErr: "Не удалось проверить обновление",
+      reloadTitle: "Обновление до v{v}",
+      reloadText: "Новая версия YoruX установлена. Перезагрузите вкладку, чтобы применить изменения.",
+      reloadPending: "Установите v{v} во вкладке, которая открылась, затем перезагрузите эту вкладку, чтобы применить изменения.",
+      reloadBtn: "Перезагрузить",
+      later: "Позже"
     },
     en: {
       back: "Back",
@@ -224,8 +229,12 @@
       repo: "Repository",
       update: "Check for updates",
       upToDate: "You have the latest version (v{v})",
-      updateAvail: "v{v} is available, opening the installer",
-      updateErr: "Could not check for updates"
+      updateErr: "Could not check for updates",
+      reloadTitle: "Update to v{v}",
+      reloadText: "A new YoruX version is installed. Reload the tab to apply the changes.",
+      reloadPending: "Install v{v} in the tab that just opened, then reload this tab to apply the changes.",
+      reloadBtn: "Reload",
+      later: "Later"
     }
   };
 
@@ -772,6 +781,46 @@
     };
   }
 
+  // src/core/version.js
+  var isNewer = (a, b) => {
+    const x = String(a).split(".").map(Number);
+    const y = String(b).split(".").map(Number);
+    for (let i = 0; i < Math.max(x.length, y.length); i++) {
+      const d = (x[i] || 0) - (y[i] || 0);
+      if (d) return d > 0;
+    }
+    return false;
+  };
+
+  // src/core/ui/reload.js
+  function showReloadPrompt(version, pending) {
+    const old = document.querySelector(".yx-pop");
+    if (old) old.remove();
+    const cs = getComputedStyle(document.body);
+    const bg = cs.backgroundColor === "rgba(0, 0, 0, 0)" ? "rgb(0, 0, 0)" : cs.backgroundColor;
+    const [r, g, b] = (bg.match(/\d+/g) || [0, 0, 0]).map(Number);
+    const box = h("div", { class: "yx-modal yx-small yx-pop", role: "alertdialog" });
+    box.dataset.theme = (r * 299 + g * 587 + b * 114) / 1e3 > 128 ? "light" : "dark";
+    box.style.background = bg;
+    box.style.color = cs.color;
+    box.style.fontFamily = xFont();
+    box.style.setProperty("--yx-bg", bg);
+    box.style.setProperty("--yx-fg", cs.color);
+    box.append(h(
+      "div",
+      { class: "yx-dlg" },
+      h("h2", null, t("reloadTitle", { v: version })),
+      h("p", null, t(pending ? "reloadPending" : "reloadText", { v: version })),
+      h(
+        "div",
+        { class: "yx-btns" },
+        h("button", { type: "button", onclick: () => box.remove() }, t("later")),
+        h("button", { type: "button", class: "yx-primary", onclick: () => location.reload() }, t("reloadBtn"))
+      )
+    ));
+    document.body.appendChild(box);
+  }
+
   // src/core/ui/settings.js
   var sw2 = (checked, onChange) => {
     const i = h("input", { type: "checkbox", checked: !!checked });
@@ -901,15 +950,6 @@
     ));
   }
   var openUrl = (url) => typeof GM_openInTab === "function" ? GM_openInTab(url, { active: true }) : window.open(url, "_blank");
-  var isNewer = (a, b) => {
-    const x = a.split(".").map(Number);
-    const y = b.split(".").map(Number);
-    for (let i = 0; i < Math.max(x.length, y.length); i++) {
-      const d = (x[i] || 0) - (y[i] || 0);
-      if (d) return d > 0;
-    }
-    return false;
-  };
   function checkUpdate() {
     GM_xmlhttpRequest({
       method: "GET",
@@ -922,10 +962,10 @@
           toast(t("updateErr"));
           return;
         }
-        if (isNewer(m[1], "0.8.13")) {
-          toast(t("updateAvail", { v: m[1] }));
+        if (isNewer(m[1], "0.8.14")) {
           openUrl("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js");
-        } else toast(t("upToDate", { v: "0.8.13" }));
+          showReloadPrompt(m[1], true);
+        } else toast(t("upToDate", { v: "0.8.14" }));
       },
       onerror: () => toast(t("updateErr")),
       ontimeout: () => toast(t("updateErr"))
@@ -940,7 +980,7 @@
         h("button", { type: "button", onclick: () => openUrl("https://github.com/SevaGetz/YoruX") }, t("repo")),
         h("button", { type: "button", onclick: checkUpdate }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.13")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.14")
     );
   }
   function getPages() {
@@ -983,7 +1023,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.13"),
+        h("span", { class: "yx-ver" }, "v0.8.14"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -2011,6 +2051,22 @@
     schedule();
   }
 
+  // src/core/updater.js
+  var KEY3 = "yorux:running";
+  function initUpdateWatch() {
+    write(KEY3, "0.8.14");
+    if (typeof GM_addValueChangeListener !== "function") return;
+    GM_addValueChangeListener(KEY3, (name, oldV, newV, remote) => {
+      if (!remote) return;
+      let v = newV;
+      try {
+        v = typeof newV === "string" ? JSON.parse(newV) : newV;
+      } catch (e) {
+      }
+      if (typeof v === "string" && isNewer(v, "0.8.14")) showReloadPrompt(v);
+    });
+  }
+
   // src/core/ui/styles.js
   var CORE_CSS = `
   .yx-ov{position:fixed;inset:0;z-index:2147483646;background:rgba(91,112,131,.4);display:flex;align-items:center;justify-content:center}
@@ -2076,16 +2132,23 @@
   .yx-err{color:#f4212e}
   .yx-empty{color:var(--yx-sub);text-align:center;padding:32px 0}
   .yx-menu-item{cursor:pointer}
+  .yx-modal.yx-small{width:min(380px,94vw);height:auto}
+  .yx-modal.yx-pop{position:fixed;right:20px;bottom:20px;z-index:2147483646}
+  .yx-dlg{padding:20px}
+  .yx-dlg h2{margin:0 0 8px;font-size:20px;line-height:24px;font-weight:800}
+  .yx-dlg p{margin:0;color:var(--yx-sub);font-size:15px;line-height:20px}
+  .yx-dlg .yx-btns{justify-content:flex-end;padding-top:16px}
   .yx-toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);z-index:2147483647;background:#1d9bf0;color:#fff;
     padding:12px 16px;border-radius:4px;font-size:15px;max-width:80vw}
 `;
 
   // src/index.js
-  LOG("loaded v0.8.13", location.href);
+  LOG("loaded v0.8.14", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   initThemes();
   watchMenu();
   initScanner();
+  initUpdateWatch();
   if (typeof GM_registerMenuCommand === "function") GM_registerMenuCommand("YoruX", () => openSettings());
 })();
