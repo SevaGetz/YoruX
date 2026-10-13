@@ -89,7 +89,7 @@ export function registerPlugins(list) {
   syncPlugins();
 }
 
-/* ---------- резервная копия настроек ---------- */
+/* ---------- settings backup ---------- */
 const backups = []; // { key, get, set } — данные вне настроек плагинов (например, темы)
 export const registerBackup = (key, get, set) => backups.push({ key, get, set });
 

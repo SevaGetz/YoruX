@@ -19,7 +19,7 @@ export default definePlugin({
   name: 'sidebarHide',
   title: () => t('title'),
   description: () => t('desc'),
-  enabledByDefault: true,
+  enabledByDefault: false,
   settings,
   start() { hooks.apply = apply; apply(); },
   stop() { hooks.apply = () => {}; removeStyle(STYLE_ID); },

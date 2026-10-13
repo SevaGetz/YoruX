@@ -46,7 +46,7 @@ export default definePlugin({
   name: 'gifFav',
   title: () => t('title'),
   description: () => t('desc'),
-  enabledByDefault: true,
+  enabledByDefault: false,
   settings,
   styles: CSS,
   tile: {
