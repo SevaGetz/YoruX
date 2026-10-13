@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.7
+// @version      0.8.8
 // @description  YoruX: модульный мод для X/Twitter с плагинами
 // @match        https://x.com/*
 // @match        https://*.x.com/*
@@ -14,6 +14,7 @@
 // @grant        GM_openInTab
 // @connect      giphy.com
 // @connect      twimg.com
+// @connect      *
 // @run-at       document-idle
 // @updateURL    https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js
 // @downloadURL  https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js
@@ -156,6 +157,22 @@
       menuItem: "Пункт YoruX в меню «Ещё»",
       menuItemHint: "Если выключить, настройки открываются из меню менеджера скриптов",
       debug: "Отладочные сообщения в консоли",
+      themes: "Темы",
+      themesDesc: "Онлайн-темы и свой CSS ({n} вкл.)",
+      themesHint: "Ссылка на .css файл, как онлайн-темы в Vencord. Подойдёт raw-ссылка на GitHub.",
+      themeUrl: "Ссылка на CSS темы…",
+      add: "Добавить",
+      badUrl: "Нужна ссылка http(s)",
+      dup: "Тема уже добавлена",
+      stLoading: "Загрузка…",
+      stOk: "Загружено",
+      stError: "Ошибка загрузки",
+      stCached: "Не удалось обновить, используется кэш",
+      refresh: "Обновить",
+      remove: "Удалить",
+      customCss: "Свой CSS",
+      customPh: "/* твой CSS */",
+      noThemes: "Тем пока нет",
       version: "Версия",
       repo: "Репозиторий",
       update: "Проверить обновление"
@@ -185,6 +202,22 @@
       menuItem: 'YoruX item in the "More" menu',
       menuItemHint: "If disabled, open settings from the userscript manager menu",
       debug: "Debug messages in the console",
+      themes: "Themes",
+      themesDesc: "Online themes and custom CSS ({n} on)",
+      themesHint: "A link to a .css file, like online themes in Vencord. A raw GitHub link works.",
+      themeUrl: "Link to a theme CSS file…",
+      add: "Add",
+      badUrl: "An http(s) link is required",
+      dup: "Theme already added",
+      stLoading: "Loading…",
+      stOk: "Loaded",
+      stError: "Load failed",
+      stCached: "Update failed, using cache",
+      refresh: "Refresh",
+      remove: "Remove",
+      customCss: "Custom CSS",
+      customPh: "/* your CSS */",
+      noThemes: "No themes yet",
       version: "Version",
       repo: "Repository",
       update: "Check for updates"
@@ -315,8 +348,11 @@
     plugins.push(...list);
     syncPlugins();
   }
+  var backups = [];
+  var registerBackup = (key, get, set) => backups.push({ key, get, set });
   var exportConfig = () => ({
     yorux: 1,
+    extra: Object.fromEntries(backups.map((b) => [b.key, b.get()])),
     enabled: enabledMap(),
     options: Object.fromEntries(withSettings().map((p) => [p.name, { ...getOpts(p.name) }]))
   });
@@ -327,6 +363,9 @@
       const o = obj.options && obj.options[p.name] || {};
       optCache.set(p.name, o);
       write(optsKey(p.name), o);
+    });
+    backups.forEach((b) => {
+      if (obj.extra && b.key in obj.extra) b.set(obj.extra[b.key]);
     });
     syncPlugins();
   }
@@ -357,7 +396,7 @@
   apply();
   onPluginsChange(apply);
 
-  // src/core/ui/settings.js
+  // src/core/ui/icons.js
   var ico = (inner, fill) => h("span", {
     innerHTML: '<svg viewBox="0 0 24 24" width="' + (fill ? 20 : 26) + '" height="' + (fill ? 20 : 26) + '" fill="' + (fill ? "currentColor" : "none") + '" stroke="' + (fill ? "none" : "currentColor") + '" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">' + inner + "</svg>"
   });
@@ -368,17 +407,272 @@
     backup: '<path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/>',
     star: '<path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85z"/>',
     chev: '<path d="M9 5l7 7-7 7"/>',
+    refresh: '<path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4"/>',
+    trash: '<path d="M5 7h14M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/>',
+    themes: '<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.5-.7 1.5-1.4 0-.9-.6-1.3-.6-2.1 0-.9.7-1.5 1.6-1.5H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="15" cy="7" r="1"/>',
     tune: '<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>'
   };
   var iconBtn = (title, inner, fill, onclick) => h("button", { type: "button", class: "yx-icon", title, onclick }, ico(inner, fill));
+
+  // src/core/themes.js
+  var KEY = "yorux:themes";
+  var CACHE = "yorux:themecache";
+  var TTL = 10 * 60 * 1e3;
+  var DEF = { links: [], custom: "", customOn: true };
+  var getThemes = () => ({ ...DEF, ...read(KEY, {}) || {} });
+  var save = (s) => write(KEY, s);
+  var getCache = () => read(CACHE, {}) || {};
+  var subs2 = /* @__PURE__ */ new Set();
+  var onThemesChange = (cb) => {
+    subs2.add(cb);
+    return () => subs2.delete(cb);
+  };
+  var emit2 = () => subs2.forEach((f) => {
+    try {
+      f();
+    } catch (e) {
+      console.error(e);
+    }
+  });
+  var status = /* @__PURE__ */ new Map();
+  var getStatus = (u) => status.get(u) || "";
+  var getMeta = (u) => (getCache()[u] || {}).meta || {};
+  function normalizeUrl(u) {
+    u = (u || "").trim();
+    const m = u.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/(.+)$/);
+    return m ? `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}` : u;
+  }
+  function parseMeta(css) {
+    const m = css.match(/\/\*\*?([\s\S]*?)\*\//);
+    const o = {};
+    if (m) for (const k of ["name", "author", "description", "version"]) {
+      const r = m[1].match(new RegExp("@" + k + "\\s+(.+)"));
+      if (r) o[k] = r[1].trim();
+    }
+    return o;
+  }
+  var gm = (url) => new Promise((res, rej) => GM_xmlhttpRequest({
+    method: "GET",
+    url,
+    responseType: "text",
+    timeout: 15e3,
+    onload: (r) => r.status >= 200 && r.status < 300 ? res(r.responseText) : rej(new Error("HTTP " + r.status)),
+    onerror: () => rej(new Error("network")),
+    ontimeout: () => rej(new Error("timeout"))
+  }));
+  async function resolveCss(url, text, depth = 0) {
+    const abs = (u) => {
+      try {
+        return new URL(u, url).href;
+      } catch (e) {
+        return u;
+      }
+    };
+    let out = text;
+    const imports = [...text.matchAll(/@import\s+(?:url\(\s*)?['"]?([^'")\s;]+)['"]?\s*\)?[^;]*;/gi)];
+    for (const m of imports) {
+      let sub = "";
+      if (depth < 3) {
+        try {
+          const u = abs(m[1]);
+          sub = await resolveCss(u, await gm(u), depth + 1);
+        } catch (e) {
+          LOG("theme @import failed:", m[1], e.message);
+        }
+      }
+      out = out.replace(m[0], sub);
+    }
+    return out.replace(/url\(\s*(['"]?)(?!data:|https?:|\/\/|#)([^'")]+)\1\s*\)/gi, (m, q, u) => `url("${abs(u)}")`);
+  }
+  var applied = /* @__PURE__ */ new Set();
+  var apply2 = (id, css) => {
+    applied.add(id);
+    addStyle(id, css);
+  };
+  var unapply = (id) => {
+    applied.delete(id);
+    removeStyle(id);
+  };
+  function applyLink(l) {
+    const id = "theme:" + l.url;
+    const c = getCache()[l.url];
+    if (l.enabled && c) apply2(id, c.css);
+    else unapply(id);
+  }
+  function applyCustom() {
+    const s = getThemes();
+    if (s.customOn && s.custom.trim()) apply2("theme:custom", s.custom);
+    else unapply("theme:custom");
+  }
+  async function load(url, force) {
+    const cache = getCache();
+    if (!force && cache[url] && Date.now() - cache[url].t < TTL) {
+      status.set(url, "ok");
+      emit2();
+      return;
+    }
+    status.set(url, "loading");
+    emit2();
+    try {
+      const raw = await gm(url);
+      const css = await resolveCss(url, raw);
+      const c = getCache();
+      c[url] = { css, meta: parseMeta(raw), t: Date.now() };
+      write(CACHE, c);
+      status.set(url, "ok");
+    } catch (e) {
+      LOG("theme load failed:", url, e.message);
+      status.set(url, cache[url] ? "cached" : "error");
+    }
+    const l = getThemes().links.find((x) => x.url === url);
+    if (l) applyLink(l);
+    emit2();
+  }
+  function reapplyAll() {
+    [...applied].forEach(unapply);
+    const s = getThemes();
+    s.links.forEach((l) => {
+      applyLink(l);
+      if (l.enabled) load(l.url);
+    });
+    applyCustom();
+    emit2();
+  }
+  function initThemes() {
+    reapplyAll();
+  }
+  function addTheme(input) {
+    const url = normalizeUrl(input);
+    if (!/^https?:\/\/\S+$/i.test(url)) return "badUrl";
+    const s = getThemes();
+    if (s.links.some((l) => l.url === url)) return "dup";
+    s.links.push({ url, enabled: true });
+    save(s);
+    load(url, true);
+    emit2();
+    return null;
+  }
+  function removeTheme(url) {
+    const s = getThemes();
+    s.links = s.links.filter((l) => l.url !== url);
+    save(s);
+    unapply("theme:" + url);
+    status.delete(url);
+    emit2();
+  }
+  function setThemeEnabled(url, on) {
+    const s = getThemes();
+    const l = s.links.find((x) => x.url === url);
+    if (!l) return;
+    l.enabled = !!on;
+    save(s);
+    applyLink(l);
+    if (on) load(url);
+    emit2();
+  }
+  var refreshTheme = (url) => load(url, true);
+  function setCustom(css, on) {
+    const s = getThemes();
+    if (css != null) s.custom = css;
+    if (on != null) s.customOn = !!on;
+    save(s);
+    applyCustom();
+  }
+  registerBackup("themes", getThemes, (v) => {
+    if (v && typeof v === "object") {
+      save({ ...DEF, ...v });
+      reapplyAll();
+    }
+  });
+
+  // src/core/ui/themes.js
   var sw = (checked, onChange) => {
+    const i = h("input", { type: "checkbox", checked: !!checked });
+    i.addEventListener("change", () => onChange(i.checked));
+    return h("label", { class: "yx-sw" }, i, h("span"));
+  };
+  var fallbackName = (u) => {
+    try {
+      return decodeURIComponent(new URL(u).pathname.split("/").pop()) || u;
+    } catch (e) {
+      return u;
+    }
+  };
+  var STATUS = { loading: "stLoading", ok: "stOk", error: "stError", cached: "stCached" };
+  function renderThemes(box) {
+    const input = h("input", { class: "yx-search", type: "text", placeholder: t("themeUrl") });
+    const add = () => {
+      const err = addTheme(input.value);
+      if (err) {
+        toast(t(err));
+        return;
+      }
+      input.value = "";
+    };
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") add();
+    });
+    const list = h("div");
+    const draw = () => {
+      list.textContent = "";
+      const links = getThemes().links;
+      if (!links.length) list.append(h("div", { class: "yx-empty" }, t("noThemes")));
+      links.forEach((l) => {
+        const meta = getMeta(l.url);
+        const st = getStatus(l.url);
+        const sub = [st ? t(STATUS[st]) : "", meta.author, meta.version && "v" + meta.version].filter(Boolean).join(" · ");
+        list.append(h(
+          "div",
+          { class: "yx-plugin" },
+          h(
+            "div",
+            { class: "yx-prow" },
+            h(
+              "div",
+              { class: "yx-pinfo" },
+              h("div", { class: "yx-pname" }, meta.name || fallbackName(l.url)),
+              meta.description ? h("div", { class: "yx-pdesc" }, meta.description) : null,
+              h("div", { class: "yx-pdesc" + (st === "error" ? " yx-err" : ""), style: { wordBreak: "break-all" } }, l.url + (sub ? " — " + sub : ""))
+            ),
+            iconBtn(t("refresh"), I.refresh, false, () => refreshTheme(l.url)),
+            iconBtn(t("remove"), I.trash, false, () => removeTheme(l.url)),
+            sw(l.enabled, (v) => setThemeEnabled(l.url, v))
+          )
+        ));
+      });
+    };
+    const off = onThemesChange(draw);
+    draw();
+    const s = getThemes();
+    const area = h("textarea", { class: "yx-code", spellcheck: false, placeholder: t("customPh") });
+    area.value = s.custom;
+    let timer2 = 0;
+    area.addEventListener("input", () => {
+      clearTimeout(timer2);
+      timer2 = setTimeout(() => setCustom(area.value, null), 400);
+    });
+    box.append(
+      h("div", { class: "yx-hint" }, t("themesHint")),
+      h("div", { class: "yx-add" }, input, h("button", { type: "button", class: "yx-primary", onclick: add }, t("add"))),
+      list,
+      h("div", { class: "yx-sect" }, t("customCss"), sw(s.customOn, (v) => setCustom(null, v))),
+      area
+    );
+    return () => {
+      off();
+      clearTimeout(timer2);
+    };
+  }
+
+  // src/core/ui/settings.js
+  var sw2 = (checked, onChange) => {
     const i = h("input", { type: "checkbox", checked: !!checked });
     i.addEventListener("change", () => onChange(i.checked));
     return h("label", { class: "yx-sw" }, i, h("span"));
   };
   function control(store, key, def) {
     const cur = store[key];
-    if (def.type === "boolean") return sw(cur, (v) => {
+    if (def.type === "boolean") return sw2(cur, (v) => {
       store[key] = v;
     });
     if (def.type === "select") {
@@ -437,7 +731,7 @@
               h("div", { class: "yx-pdesc" }, tr(p.description))
             ),
             gear,
-            sw(isEnabled(p), (v) => setEnabled(p, v))
+            sw2(isEnabled(p), (v) => setEnabled(p, v))
           ),
           opts
         ));
@@ -508,14 +802,15 @@
         h("button", { type: "button", onclick: () => openUrl("https://github.com/SevaGetz/YoruX") }, t("repo")),
         h("button", { type: "button", onclick: () => openUrl("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js") }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.7")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.8")
     );
   }
   function getPages() {
     const on = plugins.filter(isEnabled).length;
     const pages = [
       { id: "general", icon: I.tune, title: t("general"), desc: t("generalDesc"), render: renderGeneral },
-      { id: "plugins", icon: I.plugins, title: t("plugins"), desc: t("pluginsDesc", { n: on, m: plugins.length }), render: renderPlugins }
+      { id: "plugins", icon: I.plugins, title: t("plugins"), desc: t("pluginsDesc", { n: on, m: plugins.length }), render: renderPlugins },
+      { id: "themes", icon: I.themes, title: t("themes"), desc: t("themesDesc", { n: getThemes().links.filter((l) => l.enabled).length }), render: renderThemes }
     ];
     plugins.filter((p) => p.started && p.tile).forEach((p) => pages.push({
       id: "plugin:" + p.name,
@@ -550,7 +845,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.7"),
+        h("span", { class: "yx-ver" }, "v0.8.8"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -707,33 +1002,33 @@
 `;
 
   // src/plugins/gifFav/store.js
-  var KEY = "gifFavs";
-  var subs2 = /* @__PURE__ */ new Set();
+  var KEY2 = "gifFavs";
+  var subs3 = /* @__PURE__ */ new Set();
   var isHttp = (u) => typeof u === "string" && /^https?:/.test(u);
-  var load = () => {
-    const a = read(KEY, []);
+  var load2 = () => {
+    const a = read(KEY2, []);
     return Array.isArray(a) ? a : [];
   };
-  var has = (u) => load().some((f) => f.url === u);
+  var has = (u) => load2().some((f) => f.url === u);
   var subscribe = (cb) => {
-    subs2.add(cb);
-    return () => subs2.delete(cb);
+    subs3.add(cb);
+    return () => subs3.delete(cb);
   };
-  function save(a) {
-    write(KEY, a);
-    subs2.forEach((f) => f());
+  function save2(a) {
+    write(KEY2, a);
+    subs3.forEach((f) => f());
   }
   function toggle(item) {
     if (!item || !item.url) return;
-    const a = load();
+    const a = load2();
     const i = a.findIndex((f) => f.url === item.url);
     if (i >= 0) a.splice(i, 1);
     else a.unshift({ url: item.url, type: item.type, preview: item.preview || "", t: Date.now() });
-    save(a);
+    save2(a);
   }
   function importItems(arr) {
     if (!Array.isArray(arr)) throw new Error(t2("notArray"));
-    const cur = load();
+    const cur = load2();
     let added = 0;
     arr.forEach((it) => {
       if (it && isHttp(it.url) && !cur.some((c) => c.url === it.url)) {
@@ -741,14 +1036,14 @@
         added++;
       }
     });
-    save(cur);
+    save2(cur);
     return added;
   }
 
   // src/plugins/gifFav/panel.js
   function fillPanel(panel, onPick) {
     panel.textContent = "";
-    const favs = load();
+    const favs = load2();
     if (!favs.length) {
       const e = el("div", "fav-empty");
       e.textContent = t2("empty");
@@ -899,7 +1194,7 @@
     let codeSize = minCode + 1, next = eoi + 1;
     const out = [];
     let cur = 0, bits = 0;
-    const emit2 = (c) => {
+    const emit3 = (c) => {
       cur |= c << bits;
       bits += codeSize;
       while (bits >= 8) {
@@ -909,7 +1204,7 @@
       }
     };
     let dict = /* @__PURE__ */ new Map();
-    emit2(clear);
+    emit3(clear);
     let prefix = indices[0];
     for (let i = 1; i < indices.length; i++) {
       const k = indices[i], key = prefix << 8 | k;
@@ -918,20 +1213,20 @@
         prefix = v;
         continue;
       }
-      emit2(prefix);
+      emit3(prefix);
       if (next > (1 << codeSize) - 1 && codeSize < 12) codeSize++;
       if (next < 4096) dict.set(key, next++);
       else {
-        emit2(clear);
+        emit3(clear);
         dict = /* @__PURE__ */ new Map();
         next = eoi + 1;
         codeSize = minCode + 1;
       }
       prefix = k;
     }
-    emit2(prefix);
+    emit3(prefix);
     if (next > (1 << codeSize) - 1 && codeSize < 12) codeSize++;
-    emit2(eoi);
+    emit3(eoi);
     if (bits > 0) out.push(cur & 255);
     return out;
   }
@@ -1322,7 +1617,7 @@
     const grid = h("div", { class: "fav-panel" });
     const count = h("span");
     const refresh = () => {
-      count.textContent = t2("total", { n: load().length });
+      count.textContent = t2("total", { n: load2().length });
       fillPanel(grid, null);
     };
     refresh();
@@ -1335,7 +1630,7 @@
         { class: "yx-btns" },
         h("button", {
           type: "button",
-          onclick: () => downloadText("yorux-gifs-" + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + ".json", JSON.stringify(load(), null, 2))
+          onclick: () => downloadText("yorux-gifs-" + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + ".json", JSON.stringify(load2(), null, 2))
         }, t2("export")),
         h("button", {
           type: "button",
@@ -1347,7 +1642,7 @@
           type: "button",
           class: "yx-danger",
           onclick: () => {
-            if (load().length && confirm(t2("confirmClear"))) save([]);
+            if (load2().length && confirm(t2("confirmClear"))) save2([]);
           }
         }, t2("clear"))
       )
@@ -1364,7 +1659,7 @@
     tile: {
       icon: '<path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85z"/>',
       title: () => t2("title"),
-      desc: () => t2("count", { n: load().length }),
+      desc: () => t2("count", { n: load2().length }),
       render: renderManager
     },
     start() {
@@ -1487,6 +1782,8 @@
   .yx-tile-title{font-weight:700;font-size:17px;line-height:20px}
   .yx-tile-desc{color:var(--yx-sub);font-size:13px;line-height:16px}
   .yx-tile-chev{flex:none;color:var(--yx-sub);display:flex}
+  .yx-modal input[type=text].yx-search{width:100%;box-sizing:border-box;background:transparent;color:inherit;border:1px solid var(--yx-line);
+    border-radius:999px;height:42px;padding:0 16px;font:inherit;margin:8px 0}
   .yx-search:focus,.yx-modal select:focus,.yx-modal input[type=number]:focus,.yx-modal input[type=text]:focus{outline:0;border-color:#1d9bf0}
   .yx-plugin{border-top:1px solid var(--yx-line);padding:14px 0}
   .yx-plugin:first-of-type{border-top:0}
@@ -1510,6 +1807,13 @@
   .yx-sw input:checked + span{background:#1d9bf0}
   .yx-sw input:checked + span::after{transform:translateX(16px)}
   .yx-hint{display:block;color:var(--yx-sub);font-size:13px;line-height:16px;margin-top:2px}
+  .yx-add{display:flex;gap:8px;align-items:center;margin:8px 0 4px}
+  .yx-modal .yx-add input[type=text].yx-search{flex:1;margin:0}
+  .yx-code{width:100%;box-sizing:border-box;min-height:160px;resize:vertical;background:transparent;color:inherit;
+    border:1px solid var(--yx-ctl);border-radius:8px;padding:10px;font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .yx-code:focus{outline:0;border-color:#1d9bf0}
+  .yx-sect{margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:700;font-size:17px;padding-bottom:8px}
+  .yx-err{color:#f4212e}
   .yx-empty{color:var(--yx-sub);text-align:center;padding:32px 0}
   .yx-menu-item{cursor:pointer}
   .yx-toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);z-index:2147483647;background:#1d9bf0;color:#fff;
@@ -1517,9 +1821,10 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.7", location.href);
+  LOG("loaded v0.8.8", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
+  initThemes();
   watchMenu();
   initScanner();
   if (typeof GM_registerMenuCommand === "function") GM_registerMenuCommand("YoruX", () => openSettings());
