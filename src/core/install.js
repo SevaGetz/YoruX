@@ -1,1 +1,8 @@
-export const openInstaller = () => (typeof GM_openInTab === 'function' ? GM_openInTab(__RAW__, { active: true }) : window.open(__RAW__, '_blank'));
+export function openInstaller() {
+  const a = document.createElement('a');
+  a.href = __RAW__;
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
