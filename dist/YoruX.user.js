@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
-// @version      0.8.8
-// @description  YoruX: модульный мод для X/Twitter с плагинами
+// @version      0.8.9
+// @description  YoruX: modular mod for X/Twitter
 // @match        https://x.com/*
 // @match        https://*.x.com/*
 // @match        https://twitter.com/*
@@ -14,7 +14,6 @@
 // @grant        GM_openInTab
 // @connect      giphy.com
 // @connect      twimg.com
-// @connect      *
 // @run-at       document-idle
 // @updateURL    https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js
 // @downloadURL  https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js
@@ -61,9 +60,9 @@
     return ff && !/^\s*(Times|serif)/i.test(ff) ? ff : 'TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
   }
   function toast(msg) {
-    const t3 = h("div", { class: "yx-toast", style: { fontFamily: xFont() } }, msg);
-    document.body.appendChild(t3);
-    setTimeout(() => t3.remove(), 3500);
+    const t4 = h("div", { class: "yx-toast", style: { fontFamily: xFont() } }, msg);
+    document.body.appendChild(t4);
+    setTimeout(() => t4.remove(), 3500);
   }
   var styles = /* @__PURE__ */ new Map();
   var styleEls = /* @__PURE__ */ new WeakMap();
@@ -159,7 +158,7 @@
       debug: "Отладочные сообщения в консоли",
       themes: "Темы",
       themesDesc: "Онлайн-темы и свой CSS ({n} вкл.)",
-      themesHint: "Ссылка на .css файл, как онлайн-темы в Vencord. Подойдёт raw-ссылка на GitHub.",
+      themesHint: "Ссылка на .css файл. Подойдёт raw-ссылка на GitHub.",
       themeUrl: "Ссылка на CSS темы…",
       add: "Добавить",
       badUrl: "Нужна ссылка http(s)",
@@ -204,7 +203,7 @@
       debug: "Debug messages in the console",
       themes: "Themes",
       themesDesc: "Online themes and custom CSS ({n} on)",
-      themesHint: "A link to a .css file, like online themes in Vencord. A raw GitHub link works.",
+      themesHint: "A link to a .css file. A raw GitHub link works.",
       themeUrl: "Link to a theme CSS file…",
       add: "Add",
       badUrl: "An http(s) link is required",
@@ -299,9 +298,9 @@
     return { def, store, owner };
   }
   var extras = [];
-  var registerCoreSettings = (name, settings3) => {
-    settings3.owner.name = name;
-    extras.push({ name, settings: settings3 });
+  var registerCoreSettings = (name, settings4) => {
+    settings4.owner.name = name;
+    extras.push({ name, settings: settings4 });
   };
   var withSettings = () => [...extras, ...plugins].filter((p) => p.settings);
   function definePlugin(p) {
@@ -698,11 +697,11 @@
     });
     return i;
   }
-  var optionRows = (settings3) => Object.entries(settings3.def).map(([key, def]) => h(
+  var optionRows = (settings4) => Object.entries(settings4.def).map(([key, def]) => h(
     "div",
     { class: "yx-opt" },
     h("label", null, tr(def.title) || key, def.hint ? h("span", { class: "yx-hint" }, tr(def.hint)) : null),
-    control(settings3.store, key, def)
+    control(settings4.store, key, def)
   ));
   function renderPlugins(box) {
     const search = h("input", { class: "yx-search", type: "text", placeholder: t("search") });
@@ -802,7 +801,7 @@
         h("button", { type: "button", onclick: () => openUrl("https://github.com/SevaGetz/YoruX") }, t("repo")),
         h("button", { type: "button", onclick: () => openUrl("https://raw.githubusercontent.com/SevaGetz/YoruX/main/dist/YoruX.user.js") }, t("update"))
       ),
-      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.8")
+      h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.8.9")
     );
   }
   function getPages() {
@@ -845,7 +844,7 @@
         { class: "yx-head" },
         back,
         title,
-        h("span", { class: "yx-ver" }, "v0.8.8"),
+        h("span", { class: "yx-ver" }, "v0.8.9"),
         iconBtn(t("close"), I.close, true, () => close())
       ),
       body
@@ -1295,12 +1294,12 @@
           const n = Math.max(1, Math.min(120, Math.floor(dur / step)));
           const frames = [];
           for (let i = 0; i < n; i++) {
-            const t3 = Math.min(i * step, Math.max(0, dur - 0.05));
-            if (Math.abs(v.currentTime - t3) > 1e-3) {
+            const t4 = Math.min(i * step, Math.max(0, dur - 0.05));
+            if (Math.abs(v.currentTime - t4) > 1e-3) {
               await new Promise((res) => {
                 v.onseeked = res;
                 setTimeout(res, 3e3);
-                v.currentTime = t3;
+                v.currentTime = t4;
               });
             }
             ctx.drawImage(v, 0, 0, w, h2);
@@ -1672,8 +1671,130 @@
     scan: scanPicker
   });
 
+  // src/plugins/sidebarHide/items.js
+  var tid = (id) => `[data-testid="${id}"]`;
+  var href = (h2) => `nav a[href="${h2}"]`;
+  var ITEMS = [
+    { id: "home", sel: tid("AppTabBar_Home_Link") },
+    { id: "explore", sel: tid("AppTabBar_Explore_Link") },
+    { id: "notifications", sel: tid("AppTabBar_Notifications_Link") },
+    { id: "follow", sel: tid("AppTabBar_Follow_Link") },
+    { id: "chat", sel: tid("AppTabBar_DirectMessage_Link") },
+    { id: "calls", sel: tid("AppTabBar_Calls_Link") },
+    { id: "grok", sel: href("/i/grok") },
+    { id: "history", sel: href("/i/history") },
+    { id: "studio", sel: href("/i/jf/creators/studio") },
+    { id: "premium", sel: tid("premium-signup-tab") },
+    { id: "profile", sel: tid("AppTabBar_Profile_Link") },
+    { id: "more", sel: tid("AppTabBar_More_Menu"), hint: true },
+    { id: "bookmarks", sel: href("/i/bookmarks") },
+    { id: "jobs", sel: href("/jobs") },
+    { id: "spaces", sel: href("/i/spaces") },
+    { id: "lists", sel: 'nav a[href$="/lists"]' },
+    { id: "communities", sel: 'nav a[href$="/communities"]' },
+    { id: "post", sel: tid("SideNav_NewTweet_Button") },
+    { id: "account", sel: tid("SideNav_AccountSwitcher_Button") }
+  ];
+  var keyOf = (id) => "hide_" + id;
+
+  // src/plugins/sidebarHide/i18n.js
+  var t3 = createT({
+    ru: {
+      title: "Скрыть пункты меню",
+      desc: "Отключает выбранные пункты в боковом меню X (Обзор, Grok, Premium и т.д.)",
+      count: "скрыто: {n}",
+      hide: "Скрыть: {name}",
+      moreHint: "Через «Ещё» открываются настройки и остальные разделы. Настройки также доступны по адресу /settings",
+      home: "Главная",
+      explore: "Обзор",
+      notifications: "Уведомления",
+      follow: "Читать",
+      chat: "Чат",
+      calls: "Звонки",
+      grok: "Grok",
+      history: "История",
+      studio: "Творческая студия",
+      premium: "Premium",
+      profile: "Профиль",
+      more: "Ещё",
+      bookmarks: "Закладки",
+      jobs: "Вакансии",
+      spaces: "Spaces",
+      lists: "Списки",
+      communities: "Сообщества",
+      post: "Кнопка «Опубликовать пост»",
+      account: "Меню учётной записи"
+    },
+    en: {
+      title: "Hide menu items",
+      desc: "Turns off selected items in the X sidebar (Explore, Grok, Premium, etc.)",
+      count: "hidden: {n}",
+      hide: "Hide: {name}",
+      moreHint: '"More" opens settings and the other sections. Settings are also reachable at /settings',
+      home: "Home",
+      explore: "Explore",
+      notifications: "Notifications",
+      follow: "Follow",
+      chat: "Chat",
+      calls: "Calls",
+      grok: "Grok",
+      history: "History",
+      studio: "Creator Studio",
+      premium: "Premium",
+      profile: "Profile",
+      more: "More",
+      bookmarks: "Bookmarks",
+      jobs: "Jobs",
+      spaces: "Spaces",
+      lists: "Lists",
+      communities: "Communities",
+      post: "Post button",
+      account: "Account menu"
+    }
+  });
+
+  // src/plugins/sidebarHide/settings.js
+  var hooks = { apply: () => {
+  } };
+  var settings3 = definePluginSettings(Object.fromEntries(ITEMS.map((it) => [keyOf(it.id), {
+    type: "boolean",
+    title: () => t3("hide", { name: t3(it.id) }),
+    hint: it.hint ? () => t3("moreHint") : void 0,
+    default: false,
+    onChange: () => hooks.apply()
+  }])));
+
+  // src/plugins/sidebarHide/index.js
+  var STYLE_ID = "plugin:sidebarHide:rules";
+  var NAV = 'header[role="banner"]';
+  var hiddenItems = () => ITEMS.filter((it) => settings3.store[keyOf(it.id)]);
+  function apply3() {
+    const list = hiddenItems();
+    if (!list.length) {
+      removeStyle(STYLE_ID);
+      return;
+    }
+    addStyle(STYLE_ID, list.map((it) => `${NAV} ${it.sel}`).join(",\n") + " { display: none !important; }");
+  }
+  var sidebarHide_default = definePlugin({
+    name: "sidebarHide",
+    title: () => t3("title"),
+    description: () => t3("desc"),
+    enabledByDefault: true,
+    settings: settings3,
+    start() {
+      hooks.apply = apply3;
+      apply3();
+    },
+    stop() {
+      hooks.apply = () => {
+      };
+      removeStyle(STYLE_ID);
+    }
+  });
+
   // yx-plugins:plugins
-  var plugins_default = [gifFav_default];
+  var plugins_default = [gifFav_default, sidebarHide_default];
 
   // src/core/ui/menu.js
   var STAR_PATH = "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
@@ -1821,7 +1942,7 @@
 `;
 
   // src/index.js
-  LOG("loaded v0.8.8", location.href);
+  LOG("loaded v0.8.9", location.href);
   addStyle("core", CORE_CSS);
   registerPlugins(plugins_default);
   initThemes();
