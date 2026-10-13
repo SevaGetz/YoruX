@@ -6,9 +6,7 @@ const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const src = path.resolve('src');
 const pluginsDir = path.join(src, 'plugins');
 
-// версия растёт сама на каждой сборке в CI, чтобы менеджер скриптов видел обновление
-const [maj, min] = pkg.version.split('.');
-const version = `${maj}.${min}.${process.env.GITHUB_RUN_NUMBER || 0}`;
+const version = pkg.version;
 const raw = `https://raw.githubusercontent.com/${pkg.repo}/main/dist/YoruX.user.js`;
 
 const CONNECT = ['giphy.com', 'twimg.com', 'raw.githubusercontent.com'];
