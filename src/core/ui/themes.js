@@ -44,7 +44,6 @@ export function renderThemes(box) {
   const off = onThemesChange(draw);
   draw();
 
-  // свой CSS (как QuickCSS в Vencord)
   const s = getThemes();
   const area = h('textarea', { class: 'yx-code', spellcheck: false, placeholder: t('customPh') });
   area.value = s.custom;

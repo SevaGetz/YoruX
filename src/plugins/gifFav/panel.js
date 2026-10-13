@@ -15,8 +15,6 @@ export function fillPanel(panel, onPick) {
     const tile = el('div', 'fav-tile');
     let m;
     if (item.type === 'video') {
-      // mp4 не качаем заранее: есть постер — грузим видео только при наведении,
-      // нет постера — только когда плитка попала в видимую область
       m = el('video');
       m.muted = true; m.loop = true; m.playsInline = true; m.preload = 'none';
       const loadVideo = () => {

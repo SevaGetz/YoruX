@@ -36,7 +36,6 @@ function parseMeta(css) {
   return o;
 }
 
-// запросы идут через менеджер скриптов: CSP x.com не пускает внешние <link>/@import
 const gm = (url) => new Promise((res, rej) => GM_xmlhttpRequest({
   method: 'GET', url, responseType: 'text', timeout: 15000,
   onload: (r) => (r.status >= 200 && r.status < 300 ? res(r.responseText) : rej(new Error('HTTP ' + r.status))),
@@ -44,7 +43,6 @@ const gm = (url) => new Promise((res, rej) => GM_xmlhttpRequest({
   ontimeout: () => rej(new Error('timeout')),
 }));
 
-// подтягивает @import и делает относительные url() абсолютными, чтобы CSS работал как inline-стиль
 async function resolveCss(url, text, depth = 0) {
   const abs = (u) => { try { return new URL(u, url).href; } catch (e) { return u; } };
   let out = text;
@@ -60,7 +58,7 @@ async function resolveCss(url, text, depth = 0) {
   return out.replace(/url\(\s*(['"]?)(?!data:|https?:|\/\/|#)([^'")]+)\1\s*\)/gi, (m, q, u) => `url("${abs(u)}")`);
 }
 
-/* ---------- применение ---------- */
+/* ---------- apply ---------- */
 const applied = new Set();
 const apply = (id, css) => { applied.add(id); addStyle(id, css); };
 const unapply = (id) => { applied.delete(id); removeStyle(id); };
@@ -105,10 +103,9 @@ function reapplyAll() {
 }
 
 export function initThemes() {
-  reapplyAll(); // сначала из кэша — без мигания, потом фоновая проверка
+  reapplyAll();
 }
 
-/* ---------- действия для интерфейса ---------- */
 export function addTheme(input) {
   const url = normalizeUrl(input);
   if (!/^https?:\/\/\S+$/i.test(url)) return 'badUrl';

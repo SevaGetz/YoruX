@@ -12,13 +12,13 @@ const version = `${maj}.${min}.${process.env.GITHUB_RUN_NUMBER || 0}`;
 const raw = `https://raw.githubusercontent.com/${pkg.repo}/main/dist/YoruX.user.js`;
 
 // '*' нужен для тем по произвольным ссылкам
-const CONNECT = ['giphy.com', 'twimg.com', '*'];
+const CONNECT = ['giphy.com', 'twimg.com'];
 
 const header = `// ==UserScript==
 // @name         YoruX
 // @namespace    SevaGetz.x.mod
 // @version      ${version}
-// @description  YoruX: модульный мод для X/Twitter с плагинами
+// @description  YoruX: modular mod for X/Twitter
 // @match        https://x.com/*
 // @match        https://*.x.com/*
 // @match        https://twitter.com/*
@@ -35,7 +35,6 @@ ${CONNECT.map((c) => `// @connect      ${c}`).join('\n')}
 // ==/UserScript==
 `;
 
-// виртуальный модуль: автоматически подключает src/plugins/*/index.js
 const pluginsPlugin = {
   name: 'yx-plugins',
   setup(b) {

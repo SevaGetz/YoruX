@@ -1,7 +1,6 @@
 import { LOG } from '@core/dom';
 
-/* ---------- GIF-кодировщик (для конвертации mp4 -> gif) ---------- */
-// frames: массив RGBA-данных (Uint8ClampedArray). Возвращает {pal: Uint8Array(768), idx: [Uint8Array,...]}
+/* ---------- GIF-encoder (for convert mp4 -> gif) ---------- */
 function gifQuantize(frames) {
   const hist = new Uint32Array(32768);
   for (const d of frames) {
@@ -122,7 +121,7 @@ function gifWrite(w, h, pal, idxFrames, delayCs) {
   return res;
 }
 
-/* ---------- mp4 -> gif (X отдаёт GIF из твитов как mp4, а мы хотим слать именно GIF) ---------- */
+/* ---------- mp4 -> gif ---------- */
 const GIF_MAX_BYTES = 14 * 1024 * 1024;
 
 function videoBlobToGif(blob, maxW) {

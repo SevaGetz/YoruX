@@ -6,7 +6,6 @@ import { ico, I, iconBtn } from './icons';
 import { renderThemes } from './themes';
 import { getThemes } from '../themes';
 
-/* ---------- элементы управления ---------- */
 const sw = (checked, onChange) => {
   const i = h('input', { type: 'checkbox', checked: !!checked });
   i.addEventListener('change', () => onChange(i.checked));
@@ -37,7 +36,7 @@ const optionRows = (settings) => Object.entries(settings.def).map(([key, def]) =
   h('label', null, tr(def.title) || key, def.hint ? h('span', { class: 'yx-hint' }, tr(def.hint)) : null),
   control(settings.store, key, def)));
 
-/* ---------- страница «Плагины» ---------- */
+/* ---------- page "Plugins" ---------- */
 function renderPlugins(box) {
   const search = h('input', { class: 'yx-search', type: 'text', placeholder: t('search') });
   const list = h('div');
@@ -67,7 +66,7 @@ function renderPlugins(box) {
   draw();
 }
 
-/* ---------- страница «Резервная копия» ---------- */
+/* ---------- page "Backup" ---------- */
 export function downloadText(name, text) {
   const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
   const a = h('a', { href: url, download: name });
@@ -103,8 +102,7 @@ function renderBackup(box) {
     }, t('reset'))));
 }
 
-/* ---------- страница «Общие» ---------- */
-// GM_openInTab не оставляет пустую вкладку, когда менеджер скриптов перехватывает ссылку на .user.js
+/* ---------- page "General" ---------- */
 const openUrl = (url) => (typeof GM_openInTab === 'function' ? GM_openInTab(url, { active: true }) : window.open(url, '_blank'));
 
 function renderGeneral(box) {
@@ -116,7 +114,7 @@ function renderGeneral(box) {
     h('div', { class: 'yx-hint', style: { paddingTop: '12px' } }, t('version') + ': v' + __VERSION__));
 }
 
-/* ---------- плитки ---------- */
+/* ---------- plates ---------- */
 function getPages() {
   const on = plugins.filter(isEnabled).length;
   const pages = [
@@ -135,7 +133,7 @@ function getPages() {
   return pages;
 }
 
-/* ---------- окно ---------- */
+/* ---------- window ---------- */
 export function openSettings(pageId) {
   if (document.querySelector('.yx-ov')) return;
   const cs = getComputedStyle(document.body);

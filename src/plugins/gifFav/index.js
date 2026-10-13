@@ -9,7 +9,6 @@ import { fillPanel } from './panel';
 import { importItems, load, save, subscribe } from './store';
 import { scanPicker, startPicker, stopPicker } from './picker';
 
-// перенос настроек из старого userscript (ключ gifFavSettings)
 function migrate() {
   if (read('yorux:migrated:gifFav', false)) return;
   const old = read('gifFavSettings', null);

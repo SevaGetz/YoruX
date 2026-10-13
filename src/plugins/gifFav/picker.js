@@ -10,8 +10,7 @@ const states = new Set();
 const EVENTS = ['pointerdown', 'mousedown', 'mouseup', 'click'];
 let unsub = null;
 
-/* ---------- звёздочки ---------- */
-// превью giphy ".../200_d.gif" -> оригинал ".../giphy.gif"
+/* ---------- stars ---------- */
 function giphyFull(src) {
   if (!/giphy\.com\/media\//.test(src)) return src;
   return src.replace(/\/[^\/?]+\.(gif|webp|mp4)(\?.*)?$/i, '/giphy.gif');
@@ -47,8 +46,6 @@ function refreshStars() {
   qAll(getRoots(), '.fav-star').forEach((b) => b.classList.toggle('active', has(b.dataset.url)));
 }
 
-// событие может прийти из shadow DOM (target ретаргетится) — смотрим composedPath;
-// плюс запасной вариант по координатам (Firefox и дети <button>)
 function starAt(e) {
   const path = e.composedPath ? e.composedPath() : [e.target];
   for (const n of path) {
@@ -75,7 +72,7 @@ const handlers = EVENTS.map((ev) => (e) => {
   }
 });
 
-/* ---------- пикер ---------- */
+/* ---------- picker ---------- */
 function findPickers(roots) {
   const out = new Set();
   qAll(roots, '#gif-search, input[placeholder*="GIF" i]').forEach((i) => {
@@ -112,10 +109,9 @@ function setupPicker(d) {
 
   const root = d.getRootNode();
   const input = d.querySelector('#gif-search, input[placeholder*="GIF" i]');
-  // 1) надёжный якорь: корень с трендами/результатами (есть и в ЛС, и в окне создания поста)
   let sc = d.querySelector('[data-testid="gifSearchTrendingRoot"]') ||
     d.querySelector('[data-testid="gifSearchTimelineRoot"]');
-  // 2) запасной вариант: старая эвристика
+
   if (!sc && input && input.parentElement && input.parentElement.parentElement) {
     sc = input.parentElement.parentElement.nextElementSibling;
   }
@@ -129,7 +125,7 @@ function setupPicker(d) {
   const panel = el('div', 'fav-panel');
   panel.hidden = true;
   sc.before(bar, panel);
-  // в ЛС у контейнера уже есть свои отступы, в окне поста — нет: меряем и добавляем только при необходимости
+
   const dr = d.getBoundingClientRect(), br = bar.getBoundingClientRect();
   if (br.width && br.left - dr.left < 10) { bar.classList.add('fav-pad'); panel.classList.add('fav-pad'); }
 
@@ -144,7 +140,6 @@ function setupPicker(d) {
   return st;
 }
 
-/* ---------- жизненный цикл ---------- */
 export function startPicker() {
   EVENTS.forEach((ev, i) => document.addEventListener(ev, handlers[i], true));
   unsub = subscribe(() => {
@@ -172,7 +167,6 @@ export function stopPicker() {
 export function scanPicker(roots) {
   const pickers = findPickers(roots);
 
-  // GIF в твитах
   qAll(roots, 'video').forEach((v) => {
     if (v.closest('.fav-panel')) return;
     const src = v.currentSrc || v.src || '';
@@ -182,7 +176,6 @@ export function scanPicker(roots) {
     if (host) addStar(host, v);
   });
 
-  // пикер
   pickers.forEach((d) => {
     const st = setupPicker(d);
     if (!st) return;

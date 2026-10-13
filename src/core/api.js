@@ -11,7 +11,7 @@ export const onPluginsChange = (cb) => { listeners.add(cb); return () => listene
 export const notify = () => emit();
 const emit = () => listeners.forEach((f) => { try { f(); } catch (e) { console.error(e); } });
 
-/* ---------- настройки плагина ---------- */
+/* ---------- plugin settings ---------- */
 const optCache = new Map();
 const getOpts = (name) => {
   if (!optCache.has(name)) optCache.set(name, read(optsKey(name), {}) || {});
@@ -19,7 +19,6 @@ const getOpts = (name) => {
 };
 
 // definePluginSettings({ key: { type: 'boolean'|'select'|'number'|'string', title, default, choices?, min?, max? } })
-// settings.store.key читает/пишет значение (с дефолтом), как в Vencord
 export function definePluginSettings(def) {
   const owner = { name: null };
   const store = new Proxy({}, {
@@ -39,12 +38,11 @@ export function definePluginSettings(def) {
   return { def, store, owner };
 }
 
-// настройки самого YoruX (не плагин): входят в резервную копию
 const extras = [];
 export const registerCoreSettings = (name, settings) => { settings.owner.name = name; extras.push({ name, settings }); };
 const withSettings = () => [...extras, ...plugins].filter((p) => p.settings);
 
-/* ---------- плагины ---------- */
+/* ---------- plugins ---------- */
 // definePlugin({ name, title, description, enabledByDefault, settings, styles, tile, start, stop, scan })
 export function definePlugin(p) {
   if (!p.name) throw new Error('plugin without name');

@@ -15,5 +15,4 @@ initThemes();
 watchMenu();
 initScanner();
 
-// запасной вход в настройки, если пункт в меню «Ещё» выключен
 if (typeof GM_registerMenuCommand === 'function') GM_registerMenuCommand('YoruX', () => openSettings());

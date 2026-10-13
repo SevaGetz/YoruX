@@ -1,4 +1,3 @@
-// палитра и пропорции взяты из настроек X: тёмная/светлая тема, белая «пилюля» как главная кнопка, синий акцент у переключателей
 export const CORE_CSS = `
   .yx-ov{position:fixed;inset:0;z-index:2147483646;background:rgba(91,112,131,.4);display:flex;align-items:center;justify-content:center}
   .yx-modal{--yx-sub:#71767b;--yx-line:#2f3336;--yx-ctl:#536471;--yx-hover:rgba(231,233,234,.1);--yx-pbg:#eff3f4;--yx-pfg:#0f1419;

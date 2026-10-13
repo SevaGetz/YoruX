@@ -1,6 +1,5 @@
 import { h } from '../dom';
 
-// контурные иконки в стиле меню X
 export const ico = (inner, fill) => h('span', {
   innerHTML: '<svg viewBox="0 0 24 24" width="' + (fill ? 20 : 26) + '" height="' + (fill ? 20 : 26) + '" fill="' + (fill ? 'currentColor' : 'none') +
     '" stroke="' + (fill ? 'none' : 'currentColor') + '" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>',

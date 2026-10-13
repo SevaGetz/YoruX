@@ -31,7 +31,6 @@ export function injectMenu(roots) {
   });
 }
 
-// быстрый путь: пункт появляется вместе с меню, без debounce и обхода shadow DOM
 export function watchMenu() {
   new MutationObserver((muts) => {
     for (const m of muts) {

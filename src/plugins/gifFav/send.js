@@ -14,7 +14,6 @@ function findFileInput(d) {
   return list[list.length - 1];
 }
 
-// поле ввода сообщения/поста (вне окна выбора GIF)
 function findComposer(d) {
   const roots = getRoots();
   const dm = qAll(roots, '[data-testid="dm-composer-textarea"]').filter((n) => n.getClientRects().length);
@@ -75,7 +74,6 @@ export function pick(item, d) {
       };
       const type = blob.type || (item.type === 'video' ? 'video/mp4' : 'image/gif');
       if (/^video\//.test(type) && settings.store.convert) {
-        // GIF из твита лежит как mp4 — X принял бы его как видео, поэтому делаем настоящий .gif
         toast(t('converting'));
         mp4ToGif(blob, settings.store.maxW)
           .then((bytes) => finish(new File([bytes], 'favorite.gif', { type: 'image/gif' })))

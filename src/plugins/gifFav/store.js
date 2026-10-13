@@ -1,7 +1,7 @@
 import { read, write } from '@core/storage';
 import { t } from './i18n';
 
-const KEY = 'gifFavs'; // тот же ключ, что в старом скрипте — избранное сохраняется
+const KEY = 'gifFavs';
 const subs = new Set();
 
 export const isHttp = (u) => typeof u === 'string' && /^https?:/.test(u);

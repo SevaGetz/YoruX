@@ -2,7 +2,7 @@ let debug = false;
 export const setDebug = (v) => { debug = !!v; };
 export const LOG = (...a) => { if (debug) console.log('[YoruX]', ...a); };
 
-/* ---------- мини-конструктор DOM ---------- */
+/* ---------- mini DOM ---------- */
 export function h(tag, props, ...kids) {
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(props || {})) {
@@ -33,7 +33,7 @@ export function toast(msg) {
   setTimeout(() => t.remove(), 3500);
 }
 
-/* ---------- стили (document + все shadow-root'ы) ---------- */
+/* ---------- styles (document + all shadow-roots) ---------- */
 const styles = new Map(); // id -> css
 const styleEls = new WeakMap(); // root -> Map(id -> <style>)
 let seenRoots = [];
@@ -67,7 +67,6 @@ export function removeStyle(id) {
   });
 }
 
-/* ---------- обход shadow DOM ---------- */
 const OBS = { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] };
 const watched = new WeakSet();
 let mo = null;
