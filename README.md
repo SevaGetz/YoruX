@@ -41,7 +41,7 @@
 ...and more plugins coming soon!
 
 ## Disclaimer
-
+Unofficial project, not affiliated with X Corp.
 <details>
 <summary>Using YovariX violates X's terms of service</summary>
 
