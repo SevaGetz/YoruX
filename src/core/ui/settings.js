@@ -110,7 +110,6 @@ function getPages() {
   const pages = [
     { id: 'general', icon: I.tune, title: t('general'), desc: t('generalDesc'), render: renderGeneral },
     { id: 'plugins', icon: I.plugins, title: t('plugins'), desc: t('pluginsDesc', { n: on, m: plugins.length }), render: renderPlugins },
-    { id: 'changelog', icon: I.news, title: t('changelog'), desc: t('changelogDesc'), render: renderChangelog },
     { id: 'themes', icon: I.themes, title: t('themes'), desc: t('themesDesc', { n: getThemes().links.filter((l) => l.enabled).length }), render: renderThemes },
   ];
   plugins.filter((p) => p.started && p.tile).forEach((p) => pages.push({
@@ -121,6 +120,7 @@ function getPages() {
     render: p.tile.render,
   }));
   pages.push({ id: 'backup', icon: I.backup, title: t('backup'), desc: t('backupDesc'), render: renderBackup });
+  pages.push({ id: 'changelog', icon: I.news, title: t('changelog'), desc: t('changelogDesc'), render: renderChangelog });
   return pages;
 }
 
