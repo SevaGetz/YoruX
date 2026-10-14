@@ -63,9 +63,9 @@
     return ff && !/^\s*(Times|serif)/i.test(ff) ? ff : 'TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
   }
   function toast(msg) {
-    const t5 = h("div", { class: "yx-toast", style: { fontFamily: xFont() } }, msg);
-    document.body.appendChild(t5);
-    setTimeout(() => t5.remove(), 3500);
+    const t6 = h("div", { class: "yx-toast", style: { fontFamily: xFont() } }, msg);
+    document.body.appendChild(t6);
+    setTimeout(() => t6.remove(), 3500);
   }
   var styles = /* @__PURE__ */ new Map();
   var styleEls = /* @__PURE__ */ new WeakMap();
@@ -438,8 +438,100 @@
     syncPlugins();
   }
 
-  // src/plugins/embedLink/i18n.js
+  // src/plugins/adBlock/i18n.js
   var t2 = createT({
+    ru: {
+      title: "Блокировщик рекламы",
+      desc: "Скрывает рекламные посты в ленте, результатах поиска и под постами"
+    },
+    en: {
+      title: "Ad blocker",
+      desc: "Hides promoted posts in the timeline, search results and under posts"
+    }
+  });
+
+  // src/plugins/adBlock/index.js
+  var ATTR = "data-yx-ad";
+  var STYLE_ID = "plugin:adBlock:rules";
+  var CSS = `[${ATTR}] { display: none !important; }`;
+  var LABELS = /* @__PURE__ */ new Set([
+    "ad",
+    "promoted",
+    "promoted by",
+    "реклама",
+    "промо",
+    "anzeige",
+    "gesponsert",
+    "anuncio",
+    "promocionado",
+    "publicidad",
+    "sponsorisé",
+    "publicité",
+    "annuncio",
+    "sponsorizzato",
+    "anúncio",
+    "patrocinado",
+    "promovido",
+    "advertentie",
+    "gepromoot",
+    "reklam",
+    "reklama",
+    "sponsorowane",
+    "iklan",
+    "ad·",
+    "広告",
+    "プロモーション",
+    "광고",
+    "프로모션",
+    "推广",
+    "推廣",
+    "广告",
+    "廣告",
+    "إعلان",
+    "विज्ञापन"
+  ]);
+  var SKIP = '[data-testid="tweetText"], [data-testid^="card."], [data-testid="User-Name"]';
+  function hasLabel(article2) {
+    for (const el2 of article2.querySelectorAll("span")) {
+      if (el2.childElementCount) continue;
+      const txt = (el2.textContent || "").trim().toLowerCase();
+      if (!txt || txt.length > 20 || !LABELS.has(txt)) continue;
+      if (el2.closest(SKIP)) continue;
+      return true;
+    }
+    return false;
+  }
+  var hasTrackedLink = (article2) => [...article2.querySelectorAll('a[href*="twclid="]')].some((a) => !a.closest('[data-testid="tweetText"]'));
+  var hasOwnTime = (article2) => !!article2.querySelector('a[href*="/status/"] time');
+  var isAd = (article2) => hasTrackedLink(article2) || hasLabel(article2) && !hasOwnTime(article2);
+  var cellOf = (article2) => article2.closest('[data-testid="cellInnerDiv"]') || article2;
+  function scan(roots) {
+    qAll(roots, 'article[data-testid="tweet"]').forEach((article2) => {
+      const cell = cellOf(article2);
+      const ad = isAd(article2);
+      if (ad && !cell.hasAttribute(ATTR)) {
+        cell.setAttribute(ATTR, "");
+        LOG("ad hidden");
+      } else if (!ad && cell.hasAttribute(ATTR)) cell.removeAttribute(ATTR);
+    });
+  }
+  var adBlock_default = definePlugin({
+    name: "adBlock",
+    title: () => t2("title"),
+    description: () => t2("desc"),
+    enabledByDefault: true,
+    start() {
+      addStyle(STYLE_ID, CSS);
+    },
+    stop() {
+      removeStyle(STYLE_ID);
+      document.querySelectorAll("[" + ATTR + "]").forEach((n) => n.removeAttribute(ATTR));
+    },
+    scan
+  });
+
+  // src/plugins/embedLink/i18n.js
+  var t3 = createT({
     ru: {
       title: "Ссылки с эмбедом",
       desc: "Кнопка «Поделиться → Копировать ссылку» копирует ссылку через эмбед-фиксер (fixupx.com и др.), чтобы в Discord/Telegram сразу был превью",
@@ -467,12 +559,12 @@
   var settings = definePluginSettings({
     service: {
       type: "select",
-      title: () => t2("optService"),
+      title: () => t3("optService"),
       default: "fixupx.com",
-      choices: [...SERVICES.map((h2) => ({ value: h2, label: h2 })), { value: "custom", label: () => t2("custom") }]
+      choices: [...SERVICES.map((h2) => ({ value: h2, label: h2 })), { value: "custom", label: () => t3("custom") }]
     },
-    custom: { type: "text", title: () => t2("optCustom"), hint: () => t2("optCustomHint"), default: "" },
-    toast: { type: "boolean", title: () => t2("optToast"), default: false }
+    custom: { type: "text", title: () => t3("optCustom"), hint: () => t3("optCustomHint"), default: "" },
+    toast: { type: "boolean", title: () => t3("optToast"), default: false }
   });
 
   // src/plugins/embedLink/helpers.js
@@ -519,7 +611,7 @@
       clearTimeout(timer);
       timer = setTimeout(() => {
         copy(buildUrl(host, ref));
-        if (settings.store.toast) toast(t2("done", { host }));
+        if (settings.store.toast) toast(t3("done", { host }));
       }, 150);
       return;
     }
@@ -528,8 +620,8 @@
   }
   var embedLink_default = definePlugin({
     name: "embedLink",
-    title: () => t2("title"),
-    description: () => t2("desc"),
+    title: () => t3("title"),
+    description: () => t3("desc"),
     enabledByDefault: false,
     settings,
     start() {
@@ -949,6 +1041,7 @@
       v: "0.9",
       date: "2026-10-13",
       ru: [
+        "Плагин «Блокировщик рекламы»: скрывает рекламные посты в ленте, поиске и под постами",
         "Плагин «Скрыть пункты меню»: отключает выбранные пункты бокового меню (Обзор, Grok, Premium и др.)",
         "Плагин «Ссылки с эмбедом»: «Поделиться → Копировать ссылку» копирует ссылку через fixupx.com, fxtwitter.com, vxtwitter.com, fixvx.com или свой домен",
         "Автопроверка обновлений при открытии X (не чаще раза в 2 часа) и карточка «Перезагрузить вкладку» после обновления",
@@ -957,6 +1050,7 @@
         "Приветствие при первом запуске: выбор языка и плагинов и подсказка, как открывать настройки (повторно — Общие → Приветствие)"
       ],
       en: [
+        "Ad blocker plugin: hides promoted posts in the timeline, search results and under posts",
         "Hide menu items plugin: turns off selected sidebar items (Explore, Grok, Premium, etc.)",
         "Embed links plugin: Share → Copy link copies the link through fixupx.com, fxtwitter.com, vxtwitter.com, fixvx.com or your own domain",
         'Automatic update check when X opens (at most once every 2 hours) and a "Reload the tab" card after an update',
@@ -1387,7 +1481,7 @@
   }
 
   // src/plugins/gifFav/i18n.js
-  var t3 = createT({
+  var t4 = createT({
     ru: {
       title: "Избранные GIF",
       desc: "Вкладка «Избранное» в пикере GIF, звёздочки на GIF в пикере и в твитах, конвертация mp4 → GIF при отправке",
@@ -1444,18 +1538,18 @@
 
   // src/plugins/gifFav/settings.js
   var settings3 = definePluginSettings({
-    convert: { type: "boolean", title: () => t3("optConvert"), default: true },
-    maxW: { type: "select", title: () => t3("optMaxW"), default: 400, choices: [
+    convert: { type: "boolean", title: () => t4("optConvert"), default: true },
+    maxW: { type: "select", title: () => t4("optMaxW"), default: 400, choices: [
       { value: 220, label: "220 px" },
       { value: 300, label: "300 px" },
       { value: 400, label: "400 px" },
       { value: 480, label: "480 px" }
     ] },
-    closeAfter: { type: "boolean", title: () => t3("optClose"), default: true }
+    closeAfter: { type: "boolean", title: () => t4("optClose"), default: true }
   });
 
   // src/plugins/gifFav/styles.js
-  var CSS = `
+  var CSS2 = `
   .fav-star{position:absolute;top:6px;right:6px;z-index:50;width:30px;height:30px;border-radius:50%;
     background:rgba(0,0,0,.65);color:#fff;font-size:18px;line-height:1;display:flex;align-items:center;
     justify-content:center;text-align:center;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .15s;user-select:none}
@@ -1506,7 +1600,7 @@
     save2(a);
   }
   function importItems(arr) {
-    if (!Array.isArray(arr)) throw new Error(t3("notArray"));
+    if (!Array.isArray(arr)) throw new Error(t4("notArray"));
     const cur = load2();
     let added = 0;
     arr.forEach((it) => {
@@ -1525,7 +1619,7 @@
     const favs = load2();
     if (!favs.length) {
       const e = el("div", "fav-empty");
-      e.textContent = t3("empty");
+      e.textContent = t4("empty");
       panel.appendChild(e);
       return;
     }
@@ -1568,7 +1662,7 @@
       const del = el("button", "fav-del");
       del.type = "button";
       del.textContent = "★";
-      del.title = t3("delFav");
+      del.title = t4("delFav");
       del.onclick = (e) => {
         e.stopPropagation();
         toggle(item);
@@ -1774,12 +1868,12 @@
           const n = Math.max(1, Math.min(120, Math.floor(dur / step)));
           const frames = [];
           for (let i = 0; i < n; i++) {
-            const t5 = Math.min(i * step, Math.max(0, dur - 0.05));
-            if (Math.abs(v.currentTime - t5) > 1e-3) {
+            const t6 = Math.min(i * step, Math.max(0, dur - 0.05));
+            if (Math.abs(v.currentTime - t6) > 1e-3) {
               await new Promise((res) => {
                 v.onseeked = res;
                 setTimeout(res, 3e3);
-                v.currentTime = t5;
+                v.currentTime = t6;
               });
             }
             ctx.drawImage(v, 0, 0, w, h2);
@@ -1857,7 +1951,7 @@
     else document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", keyCode: 27, bubbles: true }));
   }
   function pick(item, d) {
-    toast(t3("loading"));
+    toast(t4("loading"));
     GM_xmlhttpRequest({
       method: "GET",
       url: item.url,
@@ -1865,22 +1959,22 @@
       onload: (r) => {
         const blob = r.response;
         if (!blob || !blob.size) {
-          toast(t3("dlFail"));
+          toast(t4("dlFail"));
           return;
         }
         const finish = (file) => {
           if (!attachFile(file, d)) {
-            toast(t3("noTarget"));
+            toast(t4("noTarget"));
             return;
           }
           if (settings3.store.closeAfter) setTimeout(() => closeDialog(d), 300);
         };
         const type = blob.type || (item.type === "video" ? "video/mp4" : "image/gif");
         if (/^video\//.test(type) && settings3.store.convert) {
-          toast(t3("converting"));
+          toast(t4("converting"));
           mp4ToGif(blob, settings3.store.maxW).then((bytes) => finish(new File([bytes], "favorite.gif", { type: "image/gif" }))).catch((e) => {
             LOG("конвертация в GIF не удалась, отправляю как видео:", e);
-            toast(t3("convFail"));
+            toast(t4("convFail"));
             finish(new File([blob], "favorite.mp4", { type }));
           });
           return;
@@ -1888,7 +1982,7 @@
         const ext = { "video/mp4": "mp4", "image/gif": "gif", "image/webp": "webp", "image/png": "png", "image/jpeg": "jpg" }[type] || "gif";
         finish(new File([blob], "favorite." + ext, { type }));
       },
-      onerror: () => toast(t3("netErr"))
+      onerror: () => toast(t4("netErr"))
     });
   }
 
@@ -1919,7 +2013,7 @@
       host.classList.add("fav-host");
       b = el("span", "fav-star");
       b.textContent = "★";
-      b.title = t3("addFav");
+      b.title = t4("addFav");
       host.appendChild(b);
     }
     nodeOf.set(b, node);
@@ -1997,10 +2091,10 @@
     const bar = el("div", "fav-bar");
     const bAll = el("button");
     bAll.type = "button";
-    bAll.textContent = t3("all");
+    bAll.textContent = t4("all");
     const bFav = el("button");
     bFav.type = "button";
-    bFav.textContent = t3("favTab");
+    bFav.textContent = t4("favTab");
     bar.append(bAll, bFav);
     const panel = el("div", "fav-panel");
     panel.hidden = true;
@@ -2088,7 +2182,7 @@
     const grid = h("div", { class: "fav-panel" });
     const count = h("span");
     const refresh = () => {
-      count.textContent = t3("total", { n: load2().length });
+      count.textContent = t4("total", { n: load2().length });
       fillPanel(grid, null);
     };
     refresh();
@@ -2102,35 +2196,35 @@
         h("button", {
           type: "button",
           onclick: () => downloadText("yovarix-gifs-" + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + ".json", JSON.stringify(load2(), null, 2))
-        }, t3("export")),
+        }, t4("export")),
         h("button", {
           type: "button",
           onclick: () => pickJson((arr) => {
-            toast(t3("imported", { n: importItems(arr) }));
+            toast(t4("imported", { n: importItems(arr) }));
           })
-        }, t3("import")),
+        }, t4("import")),
         h("button", {
           type: "button",
           class: "yx-danger",
           onclick: () => {
-            if (load2().length && confirm(t3("confirmClear"))) save2([]);
+            if (load2().length && confirm(t4("confirmClear"))) save2([]);
           }
-        }, t3("clear"))
+        }, t4("clear"))
       )
     );
     return unsub2;
   }
   var gifFav_default = definePlugin({
     name: "gifFav",
-    title: () => t3("title"),
-    description: () => t3("desc"),
+    title: () => t4("title"),
+    description: () => t4("desc"),
     enabledByDefault: false,
     settings: settings3,
-    styles: CSS,
+    styles: CSS2,
     tile: {
       icon: '<path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85z"/>',
-      title: () => t3("title"),
-      desc: () => t3("count", { n: load2().length }),
+      title: () => t4("title"),
+      desc: () => t4("count", { n: load2().length }),
       render: renderManager
     },
     start() {
@@ -2169,7 +2263,7 @@
   var keyOf2 = (id) => "hide_" + id;
 
   // src/plugins/sidebarHide/i18n.js
-  var t4 = createT({
+  var t5 = createT({
     ru: {
       title: "Скрыть пункты меню",
       desc: "Отключает выбранные пункты в боковом меню X (Обзор, Grok, Premium и т.д.)",
@@ -2229,28 +2323,28 @@
   } };
   var settings4 = definePluginSettings(Object.fromEntries(ITEMS.map((it) => [keyOf2(it.id), {
     type: "boolean",
-    title: () => t4("hide", { name: t4(it.id) }),
-    hint: it.hint ? () => t4("moreHint") : void 0,
+    title: () => t5("hide", { name: t5(it.id) }),
+    hint: it.hint ? () => t5("moreHint") : void 0,
     default: false,
     onChange: () => hooks.apply()
   }])));
 
   // src/plugins/sidebarHide/index.js
-  var STYLE_ID = "plugin:sidebarHide:rules";
+  var STYLE_ID2 = "plugin:sidebarHide:rules";
   var NAV = 'header[role="banner"]';
   var hiddenItems = () => ITEMS.filter((it) => settings4.store[keyOf2(it.id)]);
   function apply3() {
     const list = hiddenItems();
     if (!list.length) {
-      removeStyle(STYLE_ID);
+      removeStyle(STYLE_ID2);
       return;
     }
-    addStyle(STYLE_ID, list.map((it) => `${NAV} ${it.sel}`).join(",\n") + " { display: none !important; }");
+    addStyle(STYLE_ID2, list.map((it) => `${NAV} ${it.sel}`).join(",\n") + " { display: none !important; }");
   }
   var sidebarHide_default = definePlugin({
     name: "sidebarHide",
-    title: () => t4("title"),
-    description: () => t4("desc"),
+    title: () => t5("title"),
+    description: () => t5("desc"),
     enabledByDefault: false,
     settings: settings4,
     start() {
@@ -2260,12 +2354,12 @@
     stop() {
       hooks.apply = () => {
       };
-      removeStyle(STYLE_ID);
+      removeStyle(STYLE_ID2);
     }
   });
 
   // yx-plugins:plugins
-  var plugins_default = [embedLink_default, gifFav_default, sidebarHide_default];
+  var plugins_default = [adBlock_default, embedLink_default, gifFav_default, sidebarHide_default];
 
   // src/core/ui/menu.js
   var STAR_PATH = "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
@@ -2316,7 +2410,7 @@
   }
 
   // src/core/scanner.js
-  function scan() {
+  function scan2() {
     const roots = getRoots();
     injectMenu(roots);
     plugins.forEach((p) => {
@@ -2333,7 +2427,7 @@
     if (timer2) return;
     timer2 = setTimeout(() => {
       timer2 = 0;
-      scan();
+      scan2();
     }, 150);
   };
   function initScanner() {
