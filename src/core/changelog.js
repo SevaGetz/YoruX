@@ -5,7 +5,7 @@ import { h } from './dom';
 import { lang, t } from './i18n';
 import { showPop } from './ui/pop';
 
-const KEY = 'yorux:changelogSeen';
+const KEY = 'yovarix:changelogSeen';
 
 const keyOf = (v) => String(v).split('.').slice(0, 2).join('.');
 const current = keyOf(__VERSION__);

@@ -2,8 +2,8 @@ import { read, write } from './storage';
 import { LOG, addStyle, removeStyle } from './dom';
 import { t } from './i18n';
 
-const ENABLED_KEY = 'yorux:enabled';
-const optsKey = (n) => 'yorux:opts:' + n;
+const ENABLED_KEY = 'yovarix:enabled';
+const optsKey = (n) => 'yovarix:opts:' + n;
 
 export const plugins = [];
 const listeners = new Set();
@@ -63,12 +63,12 @@ function startPlugin(p) {
     p.start && p.start();
     p.started = true;
     LOG('plugin on:', p.name);
-  } catch (e) { console.error('[YoruX] start failed:', p.name, e); }
+  } catch (e) { console.error('[YovariX] start failed:', p.name, e); }
 }
 
 function stopPlugin(p) {
   if (!p.started) return;
-  try { p.stop && p.stop(); } catch (e) { console.error('[YoruX] stop failed:', p.name, e); }
+  try { p.stop && p.stop(); } catch (e) { console.error('[YovariX] stop failed:', p.name, e); }
   removeStyle('plugin:' + p.name);
   p.started = false;
   LOG('plugin off:', p.name);
@@ -94,14 +94,14 @@ const backups = []; // { key, get, set } — данные вне настрое�
 export const registerBackup = (key, get, set) => backups.push({ key, get, set });
 
 export const exportConfig = () => ({
-  yorux: 1,
+  yovarix: 1,
   extra: Object.fromEntries(backups.map((b) => [b.key, b.get()])),
   enabled: enabledMap(),
   options: Object.fromEntries(withSettings().map((p) => [p.name, { ...getOpts(p.name) }])),
 });
 
 export function importConfig(obj) {
-  if (!obj || obj.yorux !== 1) throw new Error(t('notYorux'));
+  if (!obj || obj.yovarix !== 1) throw new Error(t('notYovarix'));
   write(ENABLED_KEY, obj.enabled || {});
   withSettings().forEach((p) => {
     const o = (obj.options && obj.options[p.name]) || {};

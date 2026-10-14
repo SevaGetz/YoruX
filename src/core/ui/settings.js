@@ -101,7 +101,7 @@ function renderBackup(box) {
   box.append(h('div', { class: 'yx-btns', style: { paddingTop: 0 } },
     h('button', {
       type: 'button',
-      onclick: () => downloadText('yorux-settings-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(exportConfig(), null, 2)),
+      onclick: () => downloadText('yovarix-settings-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(exportConfig(), null, 2)),
     }, t('export')),
     h('button', {
       type: 'button',
@@ -168,7 +168,7 @@ export function openSettings(pageId) {
 
   const back = iconBtn(t('back'), I.back, true, () => show(null));
   back.hidden = true;
-  const title = h('h2', null, 'YoruX');
+  const title = h('h2', null, 'YovariX');
   const body = h('div', { class: 'yx-body' });
   box.append(
     h('div', { class: 'yx-head' }, back, title, h('span', { class: 'yx-ver' }, 'v' + __VERSION__),
@@ -188,7 +188,7 @@ export function openSettings(pageId) {
     body.textContent = '';
     const page = getPages().find((p) => p.id === id);
     if (!page) {
-      title.textContent = 'YoruX';
+      title.textContent = 'YovariX';
       back.hidden = true;
       body.append(h('div', { class: 'yx-tiles' }, getPages().map((p) => h('button', {
         type: 'button', class: 'yx-tile', onclick: () => show(p.id),

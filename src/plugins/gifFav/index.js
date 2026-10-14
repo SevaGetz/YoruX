@@ -21,7 +21,7 @@ function renderManager(box) {
     h('div', { class: 'yx-btns' },
       h('button', {
         type: 'button',
-        onclick: () => downloadText('yorux-gifs-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(load(), null, 2)),
+        onclick: () => downloadText('yovarix-gifs-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(load(), null, 2)),
       }, t('export')),
       h('button', {
         type: 'button',

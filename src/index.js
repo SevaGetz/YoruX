@@ -19,4 +19,4 @@ initScanner();
 initUpdateWatch();
 initChangelog(openSettings);
 
-if (typeof GM_registerMenuCommand === 'function') GM_registerMenuCommand('YoruX', () => openSettings());
+if (typeof GM_registerMenuCommand === 'function') GM_registerMenuCommand('YovariX', () => openSettings());

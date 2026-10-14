@@ -1,9 +1,9 @@
 {
-  "name": "yorux",
+  "name": "yovarix",
   "version": "0.9.0",
   "private": true,
   "type": "module",
-  "repo": "SevaGetz/YoruX",
+  "repo": "SevaGetz/YovariX",
   "scripts": {
     "build": "node build.mjs",
     "watch": "node build.mjs --watch"

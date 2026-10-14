@@ -1,6 +1,6 @@
 let debug = false;
 export const setDebug = (v) => { debug = !!v; };
-export const LOG = (...a) => { if (debug) console.log('[YoruX]', ...a); };
+export const LOG = (...a) => { if (debug) console.log('[YovariX]', ...a); };
 
 /* ---------- mini DOM ---------- */
 export function h(tag, props, ...kids) {

@@ -2,8 +2,8 @@ import { read, write } from './storage';
 import { addStyle, removeStyle, LOG } from './dom';
 import { registerBackup } from './api';
 
-const KEY = 'yorux:themes';
-const CACHE = 'yorux:themecache';
+const KEY = 'yovarix:themes';
+const CACHE = 'yovarix:themecache';
 const TTL = 10 * 60 * 1000;
 const DEF = { links: [], custom: '', customOn: true };
 

@@ -7,7 +7,7 @@ function scan() {
   injectMenu(roots);
   plugins.forEach((p) => {
     if (!p.started || !p.scan) return;
-    try { p.scan(roots); } catch (e) { console.error('[YoruX] scan error:', p.name, e); }
+    try { p.scan(roots); } catch (e) { console.error('[YovariX] scan error:', p.name, e); }
   });
 }
 

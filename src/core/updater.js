@@ -3,8 +3,8 @@ import { isNewer } from './version';
 import { showReloadPrompt } from './ui/reload';
 import { settings as general } from './general';
 
-const RUNNING = 'yorux:running';
-const LAST_CHECK = 'yorux:lastCheck';
+const RUNNING = 'yovarix:running';
+const LAST_CHECK = 'yovarix:lastCheck';
 const EVERY = 2 * 60 * 60 * 1000;
 
 export const fetchLatest = () => new Promise((res, rej) => GM_xmlhttpRequest({

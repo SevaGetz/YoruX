@@ -1,1 +1,1 @@
-YoruX
+YovariX

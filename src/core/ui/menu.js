@@ -21,7 +21,7 @@ export function injectMenu(roots) {
     const path = item.querySelector('svg path');
     if (path) path.setAttribute('d', STAR_PATH);
     const span = item.querySelector('span');
-    if (span) span.textContent = 'YoruX';
+    if (span) span.textContent = 'YovariX';
     item.addEventListener('click', (e) => {
       e.preventDefault(); e.stopPropagation();
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true }));
