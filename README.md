@@ -33,6 +33,7 @@
 
 ## Plugins
 
+* **adBlock** — Hides promoted posts in the timeline, search results and under posts
 * **embedLink** — Automatically modifies links copied via "Share → Copy link" using an embed fixer (like fixupx.com).
 * **gifFav** — Adds a "Favorites" tab to the GIF picker and star icons to GIFs in the picker and tweets.
 * **sidebarHide** — Hides selected items from the X sidebar, including Explore, Grok, and Premium.
