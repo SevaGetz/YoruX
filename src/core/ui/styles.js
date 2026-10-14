@@ -75,6 +75,16 @@ export const CORE_CSS = `
   .yx-dlg h2{margin:0 0 8px;font-size:20px;line-height:24px;font-weight:800}
   .yx-dlg p{margin:0;color:var(--yx-sub);font-size:15px;line-height:20px}
   .yx-dlg .yx-btns{justify-content:flex-end;padding-top:16px}
+  .yx-modal.yx-onb{width:min(520px,94vw);height:auto;max-height:90vh}
+  .yx-onb-h{margin:8px 0 6px;font-size:20px;line-height:24px;font-weight:800}
+  .yx-onb-p{margin:0 0 12px;color:var(--yx-sub);font-size:15px;line-height:20px}
+  .yx-foot{display:flex;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid var(--yx-line);flex:none}
+  .yx-foot .yx-spacer{flex:1}
+  .yx-how{display:flex;gap:12px;margin:0 0 14px;font-size:15px;line-height:20px}
+  .yx-how-n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--yx-pbg);color:var(--yx-pfg);
+    font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .yx-mock{display:flex;align-items:center;gap:12px;width:fit-content;margin-top:8px;padding:10px 20px 10px 16px;
+    border:1px solid var(--yx-line);border-radius:12px;font-weight:700}
   .yx-toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);z-index:2147483647;background:#1d9bf0;color:#fff;
     padding:12px 16px;border-radius:4px;font-size:15px;max-width:80vw}
 `;

@@ -8,6 +8,7 @@ export default [
       'Автопроверка обновлений при открытии X (не чаще раза в 2 часа) и карточка «Перезагрузить вкладку» после обновления',
       'Кнопка «Проверить обновление» больше не оставляет лишнюю вкладку',
       'Карточка «Что нового» после обновления и страница со всеми изменениями в настройках',
+      'Приветствие при первом запуске: выбор языка и плагинов и подсказка, как открывать настройки (повторно — Общие → Приветствие)',
     ],
     en: [
       'Hide menu items plugin: turns off selected sidebar items (Explore, Grok, Premium, etc.)',
@@ -15,6 +16,7 @@ export default [
       'Automatic update check when X opens (at most once every 2 hours) and a "Reload the tab" card after an update',
       'The "Check for updates" button no longer leaves an extra tab behind',
       'A "What\'s new" card after updates and a page with all changes in the settings',
+      'Welcome guide on first launch: pick a language and plugins and see how to open the settings (again via General → Welcome)',
     ],
   },
 ];

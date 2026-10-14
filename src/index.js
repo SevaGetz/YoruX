@@ -7,6 +7,7 @@ import { initThemes } from '@core/themes';
 import { initUpdateWatch } from '@core/updater';
 import { initChangelog } from '@core/changelog';
 import { watchMenu } from '@core/ui/menu';
+import { initOnboarding } from '@core/ui/onboarding';
 import { openSettings } from '@core/ui/settings';
 import { CORE_CSS } from '@core/ui/styles';
 
@@ -18,5 +19,6 @@ watchMenu();
 initScanner();
 initUpdateWatch();
 initChangelog(openSettings);
+initOnboarding(openSettings);
 
 if (typeof GM_registerMenuCommand === 'function') GM_registerMenuCommand('YovariX', () => openSettings());

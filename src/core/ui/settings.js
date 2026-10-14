@@ -10,36 +10,8 @@ import { showReloadPrompt } from './reload';
 import { fetchLatest } from '../updater';
 import { releases, renderEntries } from '../changelog';
 import { openInstaller } from '../install';
-
-const sw = (checked, onChange) => {
-  const i = h('input', { type: 'checkbox', checked: !!checked });
-  i.addEventListener('change', () => onChange(i.checked));
-  return h('label', { class: 'yx-sw' }, i, h('span'));
-};
-
-function control(store, key, def) {
-  const cur = store[key];
-  if (def.type === 'boolean') return sw(cur, (v) => { store[key] = v; });
-  if (def.type === 'select') {
-    const choices = def.choices.map((c) => (typeof c === 'object' ? c : { value: c, label: String(c) }));
-    const s = h('select', null, choices.map((c) => h('option', { value: String(c.value) }, tr(c.label))));
-    s.value = String(cur);
-    s.addEventListener('change', () => { store[key] = choices.find((c) => String(c.value) === s.value).value; });
-    return s;
-  }
-  if (def.type === 'number') {
-    const i = h('input', { type: 'number', min: def.min, max: def.max, value: cur, style: { width: '90px' } });
-    i.addEventListener('change', () => { const n = parseFloat(i.value); if (!isNaN(n)) store[key] = n; });
-    return i;
-  }
-  const i = h('input', { type: 'text', value: cur == null ? '' : cur });
-  i.addEventListener('change', () => { store[key] = i.value; });
-  return i;
-}
-
-const optionRows = (settings) => Object.entries(settings.def).map(([key, def]) => h('div', { class: 'yx-opt' },
-  h('label', null, tr(def.title) || key, def.hint ? h('span', { class: 'yx-hint' }, tr(def.hint)) : null),
-  control(settings.store, key, def)));
+import { sw, optionRows } from './controls';
+import { showOnboarding } from './onboarding';
 
 /* ---------- page "Plugins" ---------- */
 function renderPlugins(box) {
@@ -127,7 +99,8 @@ function renderGeneral(box) {
     h('div', { class: 'yx-opts' }, optionRows(general)),
     h('div', { class: 'yx-btns' },
       h('button', { type: 'button', onclick: () => openUrl('https://github.com/' + __REPO__) }, t('repo')),
-      h('button', { type: 'button', onclick: checkUpdate }, t('update'))),
+      h('button', { type: 'button', onclick: checkUpdate }, t('update')),
+      h('button', { type: 'button', onclick: () => { closeSettings(); showOnboarding(openSettings); } }, t('onbAgain'))),
     h('div', { class: 'yx-hint', style: { paddingTop: '12px' } }, t('version') + ': v' + __VERSION__));
 }
 
@@ -152,6 +125,9 @@ function getPages() {
 }
 
 /* ---------- window ---------- */
+let closeActive = null;
+export const closeSettings = () => { if (closeActive) closeActive(); };
+
 export function openSettings(pageId) {
   if (document.querySelector('.yx-ov')) return;
   const cs = getComputedStyle(document.body);
@@ -203,12 +179,14 @@ export function openSettings(pageId) {
   const offLang = onLangChange(() => show(current));
   const onKey = (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
   function close() {
+    if (closeActive === close) closeActive = null;
     if (cleanup) { try { cleanup(); } catch (e) {} }
     ov.remove();
     offLang();
     document.removeEventListener('keydown', onKey, true);
   }
   document.addEventListener('keydown', onKey, true);
+  closeActive = close;
   ov.addEventListener('mousedown', (e) => { if (e.target === ov) close(); });
   show(pageId || null);
 }

@@ -21,7 +21,7 @@
 -   Easy to install
 -   Built in plugins library
 -   All Browsers Support: Run YovariX in your Browser via UserScript
--   Custom CSS and Themes: Inbuilt css editor with support to import any css files (Example [Catppucin-mocha](https://raw.githubusercontent.com/SevaGetz/YovariX/refs/heads/main/catppuccin-mocha.css))
+-   Custom CSS and Themes: Inbuilt css editor with support to import any css files (Example [Catppuccin-mocha](https://raw.githubusercontent.com/SevaGetz/YovariX/refs/heads/main/catppuccin-mocha.css))
 
 ## Install
 > [!NOTE]
