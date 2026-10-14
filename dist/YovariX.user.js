@@ -192,7 +192,21 @@
       changelog: "Что нового",
       changelogDesc: "Список изменений по версиям",
       newsTitle: "YovariX обновлён до v{v}",
-      allChanges: "Все изменения"
+      allChanges: "Все изменения",
+      onbAgain: "Приветствие и первичная настройка",
+      onbWelcome: "Добро пожаловать!",
+      onbWelcomeText: "YovariX — модульный мод для X/Twitter. Быстро настроим основное, это займёт минуту.",
+      onbPluginsTitle: "Выберите плагины",
+      onbPluginsText: "Включите нужные — позже это можно поменять в Настройки → Плагины. Там же у плагинов есть дополнительные опции (значок с ползунками).",
+      onbThemesHint: "Онлайн-темы и свой CSS добавляются в Настройки → Темы.",
+      onbOpenTitle: "Как открыть настройки",
+      onbOpenText: "Настройки доступны в любой момент двумя способами:",
+      onbHowMenu: "В боковом меню X нажмите «Ещё» — там появится пункт YovariX:",
+      onbHowManager: "Или нажмите на иконку менеджера скриптов (Tampermonkey, Violentmonkey) в браузере и выберите YovariX.",
+      onbSkip: "Пропустить",
+      onbNext: "Далее",
+      onbOpen: "Открыть настройки",
+      onbDone: "Готово"
     },
     en: {
       back: "Back",
@@ -252,7 +266,21 @@
       changelog: "What's new",
       changelogDesc: "Changes by version",
       newsTitle: "YovariX updated to v{v}",
-      allChanges: "All changes"
+      allChanges: "All changes",
+      onbAgain: "Welcome & initial setup",
+      onbWelcome: "Welcome!",
+      onbWelcomeText: "YovariX is a modular mod for X/Twitter. Let's set up the basics, it takes a minute.",
+      onbPluginsTitle: "Choose plugins",
+      onbPluginsText: "Turn on what you need. You can change this later in Settings → Plugins, where plugins also have extra options (the sliders icon).",
+      onbThemesHint: "Online themes and custom CSS are added in Settings → Themes.",
+      onbOpenTitle: "How to open settings",
+      onbOpenText: "You can open the settings at any time in two ways:",
+      onbHowMenu: 'In the X sidebar click "More" — a YovariX item appears there:',
+      onbHowManager: "Or click your userscript manager icon (Tampermonkey, Violentmonkey) in the browser and choose YovariX.",
+      onbSkip: "Skip",
+      onbNext: "Next",
+      onbOpen: "Open settings",
+      onbDone: "Done"
     }
   };
 
@@ -925,14 +953,16 @@
         "Плагин «Ссылки с эмбедом»: «Поделиться → Копировать ссылку» копирует ссылку через fixupx.com, fxtwitter.com, vxtwitter.com, fixvx.com или свой домен",
         "Автопроверка обновлений при открытии X (не чаще раза в 2 часа) и карточка «Перезагрузить вкладку» после обновления",
         "Кнопка «Проверить обновление» больше не оставляет лишнюю вкладку",
-        "Карточка «Что нового» после обновления и страница со всеми изменениями в настройках"
+        "Карточка «Что нового» после обновления и страница со всеми изменениями в настройках",
+        "Приветствие при первом запуске: выбор языка и плагинов и подсказка, как открывать настройки (повторно — Общие → Приветствие)"
       ],
       en: [
         "Hide menu items plugin: turns off selected sidebar items (Explore, Grok, Premium, etc.)",
         "Embed links plugin: Share → Copy link copies the link through fixupx.com, fxtwitter.com, vxtwitter.com, fixvx.com or your own domain",
         'Automatic update check when X opens (at most once every 2 hours) and a "Reload the tab" card after an update',
         'The "Check for updates" button no longer leaves an extra tab behind',
-        `A "What's new" card after updates and a page with all changes in the settings`
+        `A "What's new" card after updates and a page with all changes in the settings`,
+        "Welcome guide on first launch: pick a language and plugins and see how to open the settings (again via General → Welcome)"
       ]
     }
   ];
@@ -968,7 +998,7 @@
     }), 1500);
   }
 
-  // src/core/ui/settings.js
+  // src/core/ui/controls.js
   var sw2 = (checked, onChange) => {
     const i = h("input", { type: "checkbox", checked: !!checked });
     i.addEventListener("change", () => onChange(i.checked));
@@ -1002,12 +1032,134 @@
     });
     return i;
   }
-  var optionRows = (settings5) => Object.entries(settings5.def).map(([key, def]) => h(
+  var optionRows = (settings5, keys) => Object.entries(settings5.def).filter(([key]) => !keys || keys.includes(key)).map(([key, def]) => h(
     "div",
     { class: "yx-opt" },
     h("label", null, tr(def.title) || key, def.hint ? h("span", { class: "yx-hint" }, tr(def.hint)) : null),
     control(settings5.store, key, def)
   ));
+
+  // src/core/ui/onboarding.js
+  var KEY3 = "yovarix:onboarded";
+  var STEPS = 3;
+  function showOnboarding(openSettings2) {
+    if (document.querySelector(".yx-ov")) return;
+    const cs = getComputedStyle(document.body);
+    const bg = cs.backgroundColor === "rgba(0, 0, 0, 0)" ? "rgb(0, 0, 0)" : cs.backgroundColor;
+    const [r, g, b] = (bg.match(/\d+/g) || [0, 0, 0]).map(Number);
+    const ov = h("div", { class: "yx-ov" });
+    const box = h("div", { class: "yx-modal yx-onb", role: "dialog" });
+    box.dataset.theme = (r * 299 + g * 587 + b * 114) / 1e3 > 128 ? "light" : "dark";
+    box.style.background = bg;
+    box.style.color = cs.color;
+    box.style.fontFamily = xFont();
+    box.style.setProperty("--yx-bg", bg);
+    box.style.setProperty("--yx-fg", cs.color);
+    const title = h("h2", null, "YovariX");
+    const counter = h("span", { class: "yx-ver" });
+    const closeBtn = iconBtn(t("close"), I.close, true, () => finish());
+    const body = h("div", { class: "yx-body" });
+    const foot = h("div", { class: "yx-foot" });
+    box.append(h("div", { class: "yx-head" }, title, counter, closeBtn), body, foot);
+    ov.appendChild(box);
+    document.body.appendChild(ov);
+    let step = 0;
+    let done = false;
+    const renderLang = () => [
+      h("h3", { class: "yx-onb-h" }, t("onbWelcome")),
+      h("p", { class: "yx-onb-p" }, t("onbWelcomeText")),
+      h("div", { class: "yx-opts" }, optionRows(settings2, ["lang", "autoUpdate"]))
+    ];
+    const renderPlugins2 = () => [
+      h("h3", { class: "yx-onb-h" }, t("onbPluginsTitle")),
+      h("p", { class: "yx-onb-p" }, t("onbPluginsText")),
+      h("div", null, [...plugins].sort((a, c) => a.name.localeCompare(c.name)).map((p) => h(
+        "div",
+        { class: "yx-plugin" },
+        h(
+          "div",
+          { class: "yx-prow" },
+          h(
+            "div",
+            { class: "yx-pinfo" },
+            h("div", { class: "yx-pname" }, tr(p.title) || p.name),
+            h("div", { class: "yx-pdesc" }, tr(p.description))
+          ),
+          sw2(isEnabled(p), (v) => setEnabled(p, v))
+        )
+      ))),
+      h("div", { class: "yx-hint", style: { paddingTop: "8px" } }, t("onbThemesHint"))
+    ];
+    const renderOpen = () => [
+      h("h3", { class: "yx-onb-h" }, t("onbOpenTitle")),
+      h("p", { class: "yx-onb-p" }, t("onbOpenText")),
+      h(
+        "div",
+        { class: "yx-how" },
+        h("span", { class: "yx-how-n" }, "1"),
+        h(
+          "div",
+          null,
+          t("onbHowMenu"),
+          h("div", { class: "yx-mock" }, ico(I.star, true), h("span", null, "YovariX"))
+        )
+      ),
+      h(
+        "div",
+        { class: "yx-how" },
+        h("span", { class: "yx-how-n" }, "2"),
+        h("div", null, t("onbHowManager"))
+      ),
+      h("div", { class: "yx-opts" }, optionRows(settings2, ["menuItem"]))
+    ];
+    const pages = [renderLang, renderPlugins2, renderOpen];
+    function draw() {
+      const last = step === STEPS - 1;
+      counter.textContent = step + 1 + "/" + STEPS;
+      closeBtn.title = t("close");
+      body.textContent = "";
+      body.append(...pages[step]());
+      body.scrollTop = 0;
+      foot.textContent = "";
+      foot.append(...[
+        last ? null : h("button", { type: "button", onclick: () => finish() }, t("onbSkip")),
+        h("span", { class: "yx-spacer" }),
+        step > 0 ? h("button", { type: "button", onclick: () => {
+          step--;
+          draw();
+        } }, t("back")) : null,
+        last ? h("button", { type: "button", onclick: () => finish(true) }, t("onbOpen")) : null,
+        last ? h("button", { type: "button", class: "yx-primary", onclick: () => finish() }, t("onbDone")) : h("button", { type: "button", class: "yx-primary", onclick: () => {
+          step++;
+          draw();
+        } }, t("onbNext"))
+      ].filter(Boolean));
+    }
+    const offLang = onLangChange(draw);
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        finish();
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    function finish(thenOpen) {
+      if (done) return;
+      done = true;
+      write(KEY3, true);
+      offLang();
+      document.removeEventListener("keydown", onKey, true);
+      ov.remove();
+      if (thenOpen) openSettings2();
+    }
+    draw();
+  }
+  function initOnboarding(openSettings2) {
+    if (read(KEY3, false)) return;
+    setTimeout(() => showOnboarding(openSettings2), 1500);
+  }
+
+  // src/core/ui/settings.js
   function renderPlugins(box) {
     const search = h("input", { class: "yx-search", type: "text", placeholder: t("search") });
     const list = h("div");
@@ -1116,7 +1268,11 @@
         "div",
         { class: "yx-btns" },
         h("button", { type: "button", onclick: () => openUrl("https://github.com/SevaGetz/YovariX") }, t("repo")),
-        h("button", { type: "button", onclick: checkUpdate }, t("update"))
+        h("button", { type: "button", onclick: checkUpdate }, t("update")),
+        h("button", { type: "button", onclick: () => {
+          closeSettings();
+          showOnboarding(openSettings);
+        } }, t("onbAgain"))
       ),
       h("div", { class: "yx-hint", style: { paddingTop: "12px" } }, t("version") + ": v0.9.0")
     );
@@ -1139,6 +1295,10 @@
     pages.push({ id: "backup", icon: I.backup, title: t("backup"), desc: t("backupDesc"), render: renderBackup });
     return pages;
   }
+  var closeActive = null;
+  var closeSettings = () => {
+    if (closeActive) closeActive();
+  };
   function openSettings(pageId) {
     if (document.querySelector(".yx-ov")) return;
     const cs = getComputedStyle(document.body);
@@ -1207,6 +1367,7 @@
       }
     };
     function close() {
+      if (closeActive === close) closeActive = null;
       if (cleanup) {
         try {
           cleanup();
@@ -1218,6 +1379,7 @@
       document.removeEventListener("keydown", onKey, true);
     }
     document.addEventListener("keydown", onKey, true);
+    closeActive = close;
     ov.addEventListener("mousedown", (e) => {
       if (e.target === ov) close();
     });
@@ -1319,11 +1481,11 @@
 `;
 
   // src/plugins/gifFav/store.js
-  var KEY3 = "gifFavs";
+  var KEY4 = "gifFavs";
   var subs3 = /* @__PURE__ */ new Set();
   var isHttp = (u) => typeof u === "string" && /^https?:/.test(u);
   var load2 = () => {
-    const a = read(KEY3, []);
+    const a = read(KEY4, []);
     return Array.isArray(a) ? a : [];
   };
   var has = (u) => load2().some((f) => f.url === u);
@@ -1332,7 +1494,7 @@
     return () => subs3.delete(cb);
   };
   function save2(a) {
-    write(KEY3, a);
+    write(KEY4, a);
     subs3.forEach((f) => f());
   }
   function toggle(item) {
@@ -2259,6 +2421,16 @@
   .yx-dlg h2{margin:0 0 8px;font-size:20px;line-height:24px;font-weight:800}
   .yx-dlg p{margin:0;color:var(--yx-sub);font-size:15px;line-height:20px}
   .yx-dlg .yx-btns{justify-content:flex-end;padding-top:16px}
+  .yx-modal.yx-onb{width:min(520px,94vw);height:auto;max-height:90vh}
+  .yx-onb-h{margin:8px 0 6px;font-size:20px;line-height:24px;font-weight:800}
+  .yx-onb-p{margin:0 0 12px;color:var(--yx-sub);font-size:15px;line-height:20px}
+  .yx-foot{display:flex;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid var(--yx-line);flex:none}
+  .yx-foot .yx-spacer{flex:1}
+  .yx-how{display:flex;gap:12px;margin:0 0 14px;font-size:15px;line-height:20px}
+  .yx-how-n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--yx-pbg);color:var(--yx-pfg);
+    font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .yx-mock{display:flex;align-items:center;gap:12px;width:fit-content;margin-top:8px;padding:10px 20px 10px 16px;
+    border:1px solid var(--yx-line);border-radius:12px;font-weight:700}
   .yx-toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);z-index:2147483647;background:#1d9bf0;color:#fff;
     padding:12px 16px;border-radius:4px;font-size:15px;max-width:80vw}
 `;
@@ -2272,5 +2444,6 @@
   initScanner();
   initUpdateWatch();
   initChangelog(openSettings);
+  initOnboarding(openSettings);
   if (typeof GM_registerMenuCommand === "function") GM_registerMenuCommand("YovariX", () => openSettings());
 })();
