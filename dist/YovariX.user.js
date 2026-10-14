@@ -359,9 +359,9 @@
     return { def, store, owner };
   }
   var extras = [];
-  var registerCoreSettings = (name, settings5) => {
-    settings5.owner.name = name;
-    extras.push({ name, settings: settings5 });
+  var registerCoreSettings = (name, settings6) => {
+    settings6.owner.name = name;
+    extras.push({ name, settings: settings6 });
   };
   var withSettings = () => [...extras, ...plugins].filter((p) => p.settings);
   function definePlugin(p) {
@@ -442,16 +442,23 @@
   var t2 = createT({
     ru: {
       title: "Блокировщик рекламы",
-      desc: "Скрывает рекламные посты в ленте, результатах поиска и под постами"
+      desc: "Скрывает рекламные посты в ленте, результатах поиска и под постами",
+      optPremium: "Скрывать карточку «Подпишитесь на Premium»",
+      optPremiumHint: "Рекламный блок Premium в правой колонке"
     },
     en: {
       title: "Ad blocker",
-      desc: "Hides promoted posts in the timeline, search results and under posts"
+      desc: "Hides promoted posts in the timeline, search results and under posts",
+      optPremium: 'Hide the "Subscribe to Premium" card',
+      optPremiumHint: "The Premium promo block in the right column"
     }
   });
 
   // src/plugins/adBlock/index.js
   var ATTR = "data-yx-ad";
+  var settings = definePluginSettings({
+    premiumPromo: { type: "boolean", title: () => t2("optPremium"), hint: () => t2("optPremiumHint"), default: true, onChange: notify }
+  });
   var STYLE_ID = "plugin:adBlock:rules";
   var CSS = `[${ATTR}] { display: none !important; }`;
   var LABELS = /* @__PURE__ */ new Set([
@@ -505,7 +512,18 @@
   var hasOwnTime = (article2) => !!article2.querySelector('a[href*="/status/"] time');
   var isAd = (article2) => hasTrackedLink(article2) || hasLabel(article2) && !hasOwnTime(article2);
   var cellOf = (article2) => article2.closest('[data-testid="cellInnerDiv"]') || article2;
+  var isPremiumPromo = (aside) => !!aside.querySelector('a[href^="/i/premium_sign_up"]');
+  function scanPromos(roots) {
+    qAll(roots, 'aside[role="complementary"]').forEach((aside) => {
+      const hide = settings.store.premiumPromo && isPremiumPromo(aside);
+      if (hide && !aside.hasAttribute(ATTR)) {
+        aside.setAttribute(ATTR, "");
+        LOG("premium promo hidden");
+      } else if (!hide && aside.hasAttribute(ATTR)) aside.removeAttribute(ATTR);
+    });
+  }
   function scan(roots) {
+    scanPromos(roots);
     qAll(roots, 'article[data-testid="tweet"]').forEach((article2) => {
       const cell = cellOf(article2);
       const ad = isAd(article2);
@@ -519,13 +537,14 @@
     name: "adBlock",
     title: () => t2("title"),
     description: () => t2("desc"),
-    enabledByDefault: true,
+    enabledByDefault: false,
+    settings,
     start() {
       addStyle(STYLE_ID, CSS);
     },
     stop() {
       removeStyle(STYLE_ID);
-      document.querySelectorAll("[" + ATTR + "]").forEach((n) => n.removeAttribute(ATTR));
+      qAll(getRoots(), "[" + ATTR + "]").forEach((n) => n.removeAttribute(ATTR));
     },
     scan
   });
@@ -556,7 +575,7 @@
 
   // src/plugins/embedLink/settings.js
   var SERVICES = ["fixupx.com", "fxtwitter.com", "vxtwitter.com", "fixvx.com"];
-  var settings = definePluginSettings({
+  var settings2 = definePluginSettings({
     service: {
       type: "select",
       title: () => t3("optService"),
@@ -591,7 +610,7 @@
   var article = null;
   var timer = 0;
   var hostNow = () => {
-    const s = settings.store;
+    const s = settings2.store;
     return s.service === "custom" ? cleanHost(s.custom) : s.service;
   };
   function copy(text) {
@@ -611,7 +630,7 @@
       clearTimeout(timer);
       timer = setTimeout(() => {
         copy(buildUrl(host, ref));
-        if (settings.store.toast) toast(t3("done", { host }));
+        if (settings2.store.toast) toast(t3("done", { host }));
       }, 150);
       return;
     }
@@ -623,7 +642,7 @@
     title: () => t3("title"),
     description: () => t3("desc"),
     enabledByDefault: false,
-    settings,
+    settings: settings2,
     start() {
       document.addEventListener("click", onClick, true);
     },
@@ -635,7 +654,7 @@
   });
 
   // src/core/general.js
-  var settings2 = definePluginSettings({
+  var settings3 = definePluginSettings({
     lang: {
       type: "select",
       title: () => t("lang"),
@@ -647,9 +666,9 @@
     autoUpdate: { type: "boolean", title: () => t("autoUpdate"), hint: () => t("autoUpdateHint"), default: true },
     debug: { type: "boolean", title: () => t("debug"), default: false, onChange: setDebug }
   });
-  registerCoreSettings("core", settings2);
-  setLangSource(() => settings2.store.lang);
-  var apply = () => setDebug(settings2.store.debug);
+  registerCoreSettings("core", settings3);
+  setLangSource(() => settings3.store.lang);
+  var apply = () => setDebug(settings3.store.debug);
   apply();
   onPluginsChange(apply);
 
@@ -1012,7 +1031,7 @@
     ontimeout: () => rej(new Error("timeout"))
   }));
   function autoCheck() {
-    if (!settings2.store.autoUpdate) return;
+    if (!settings3.store.autoUpdate) return;
     if (Date.now() - read(LAST_CHECK, 0) < EVERY) return;
     write(LAST_CHECK, Date.now());
     fetchLatest().then((v) => {
@@ -1126,11 +1145,11 @@
     });
     return i;
   }
-  var optionRows = (settings5, keys) => Object.entries(settings5.def).filter(([key]) => !keys || keys.includes(key)).map(([key, def]) => h(
+  var optionRows = (settings6, keys) => Object.entries(settings6.def).filter(([key]) => !keys || keys.includes(key)).map(([key, def]) => h(
     "div",
     { class: "yx-opt" },
     h("label", null, tr(def.title) || key, def.hint ? h("span", { class: "yx-hint" }, tr(def.hint)) : null),
-    control(settings5.store, key, def)
+    control(settings6.store, key, def)
   ));
 
   // src/core/ui/onboarding.js
@@ -1162,7 +1181,7 @@
     const renderLang = () => [
       h("h3", { class: "yx-onb-h" }, t("onbWelcome")),
       h("p", { class: "yx-onb-p" }, t("onbWelcomeText")),
-      h("div", { class: "yx-opts" }, optionRows(settings2, ["lang", "autoUpdate"]))
+      h("div", { class: "yx-opts" }, optionRows(settings3, ["lang", "autoUpdate"]))
     ];
     const renderPlugins2 = () => [
       h("h3", { class: "yx-onb-h" }, t("onbPluginsTitle")),
@@ -1204,7 +1223,7 @@
         h("span", { class: "yx-how-n" }, "2"),
         h("div", null, t("onbHowManager"))
       ),
-      h("div", { class: "yx-opts" }, optionRows(settings2, ["menuItem"]))
+      h("div", { class: "yx-opts" }, optionRows(settings3, ["menuItem"]))
     ];
     const pages = [renderLang, renderPlugins2, renderOpen];
     function draw() {
@@ -1357,7 +1376,7 @@
   }
   function renderGeneral(box) {
     box.append(
-      h("div", { class: "yx-opts" }, optionRows(settings2)),
+      h("div", { class: "yx-opts" }, optionRows(settings3)),
       h(
         "div",
         { class: "yx-btns" },
@@ -1537,7 +1556,7 @@
   });
 
   // src/plugins/gifFav/settings.js
-  var settings3 = definePluginSettings({
+  var settings4 = definePluginSettings({
     convert: { type: "boolean", title: () => t4("optConvert"), default: true },
     maxW: { type: "select", title: () => t4("optMaxW"), default: 400, choices: [
       { value: 220, label: "220 px" },
@@ -1967,12 +1986,12 @@
             toast(t4("noTarget"));
             return;
           }
-          if (settings3.store.closeAfter) setTimeout(() => closeDialog(d), 300);
+          if (settings4.store.closeAfter) setTimeout(() => closeDialog(d), 300);
         };
         const type = blob.type || (item.type === "video" ? "video/mp4" : "image/gif");
-        if (/^video\//.test(type) && settings3.store.convert) {
+        if (/^video\//.test(type) && settings4.store.convert) {
           toast(t4("converting"));
-          mp4ToGif(blob, settings3.store.maxW).then((bytes) => finish(new File([bytes], "favorite.gif", { type: "image/gif" }))).catch((e) => {
+          mp4ToGif(blob, settings4.store.maxW).then((bytes) => finish(new File([bytes], "favorite.gif", { type: "image/gif" }))).catch((e) => {
             LOG("конвертация в GIF не удалась, отправляю как видео:", e);
             toast(t4("convFail"));
             finish(new File([blob], "favorite.mp4", { type }));
@@ -2219,7 +2238,7 @@
     title: () => t4("title"),
     description: () => t4("desc"),
     enabledByDefault: false,
-    settings: settings3,
+    settings: settings4,
     styles: CSS2,
     tile: {
       icon: '<path d="M12 3.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L12 16.9l-5.25 2.75 1-5.85L3.5 9.65l5.9-.85z"/>',
@@ -2321,7 +2340,7 @@
   // src/plugins/sidebarHide/settings.js
   var hooks = { apply: () => {
   } };
-  var settings4 = definePluginSettings(Object.fromEntries(ITEMS.map((it) => [keyOf2(it.id), {
+  var settings5 = definePluginSettings(Object.fromEntries(ITEMS.map((it) => [keyOf2(it.id), {
     type: "boolean",
     title: () => t5("hide", { name: t5(it.id) }),
     hint: it.hint ? () => t5("moreHint") : void 0,
@@ -2332,7 +2351,7 @@
   // src/plugins/sidebarHide/index.js
   var STYLE_ID2 = "plugin:sidebarHide:rules";
   var NAV = 'header[role="banner"]';
-  var hiddenItems = () => ITEMS.filter((it) => settings4.store[keyOf2(it.id)]);
+  var hiddenItems = () => ITEMS.filter((it) => settings5.store[keyOf2(it.id)]);
   function apply3() {
     const list = hiddenItems();
     if (!list.length) {
@@ -2346,7 +2365,7 @@
     title: () => t5("title"),
     description: () => t5("desc"),
     enabledByDefault: false,
-    settings: settings4,
+    settings: settings5,
     start() {
       hooks.apply = apply3;
       apply3();
@@ -2364,7 +2383,7 @@
   // src/core/ui/menu.js
   var STAR_PATH = "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
   function injectMenu(roots) {
-    if (!settings2.store.menuItem) {
+    if (!settings3.store.menuItem) {
       qAll(roots, ".yx-menu-item").forEach((n) => n.remove());
       return;
     }
